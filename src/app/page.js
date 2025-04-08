@@ -223,7 +223,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer">
+              <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer" onClick={() => router.push("/Landing")}>
                 Login
               </button>
             </div>
