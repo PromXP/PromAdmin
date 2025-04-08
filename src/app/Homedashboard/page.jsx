@@ -28,24 +28,28 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = () => {
-  const useWindowSize = () => {
-    const [size, setSize] = useState({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
+const useWindowSize = () => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
-    useEffect(() => {
+  useEffect(() => {
+    // Make sure this runs only on client
+    if (typeof window !== 'undefined') {
       const handleResize = () => {
         setSize({ width: window.innerWidth, height: window.innerHeight });
       };
 
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
+      // Set initial size
+      handleResize();
 
-    return size;
-  };
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  return size;
+};
+
+const page = () => {
 
   const { width, height } = useWindowSize();
   console.log("Screen Width:", width, "Screen Height:", height);

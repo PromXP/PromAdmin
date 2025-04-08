@@ -34,19 +34,23 @@ const poppins = Poppins({
 const page = ({ isOpenrem, onCloserem, children }) => {
   const useWindowSize = () => {
     const [size, setSize] = useState({
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: 0,
+      height: 0,
     });
-
+  
     useEffect(() => {
-      const handleResize = () => {
-        setSize({ width: window.innerWidth, height: window.innerHeight });
+      const updateSize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
       };
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+  
+      updateSize(); // set initial size
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
     }, []);
-
+  
     return size;
   };
 

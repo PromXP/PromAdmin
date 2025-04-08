@@ -37,24 +37,28 @@ const poppins = Poppins({
 
 const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
   const useWindowSize = () => {
-    const [size, setSize] = useState({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-
-    useEffect(() => {
-      const handleResize = () => {
-        setSize({ width: window.innerWidth, height: window.innerHeight });
-      };
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    return size;
-  };
-
-  const { width, height } = useWindowSize();
+      const [size, setSize] = useState({
+        width: 0,
+        height: 0,
+      });
+    
+      useEffect(() => {
+        const updateSize = () => {
+          setSize({
+            width: window.innerWidth,
+            height: window.innerHeight,
+          });
+        };
+    
+        updateSize(); // set initial size
+        window.addEventListener("resize", updateSize);
+        return () => window.removeEventListener("resize", updateSize);
+      }, []);
+    
+      return size;
+    };
+  
+    const { width, height } = useWindowSize();
 
   console.log("Screen Width:", width, "Screen Height:", height);
   const [message, setMessage] = useState("");
@@ -273,7 +277,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
                     alt="close"
                     onClick={() => {
                       setMessage("");
-                      onCloseacc(); // if onCloserem handles popup close
+                      onCloseaccdoc(); // if onCloserem handles popup close
                     }}
                   />
                 </div>
