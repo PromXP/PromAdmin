@@ -55,7 +55,7 @@ const page = ({ isOpenrem, onCloserem, children }) => {
   };
 
   const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const completedItems = ["Oxford Knee Score", "Short Form - 12"];
   const pendingItems = ["KOOS", "Knee Society Score"];

@@ -55,7 +55,7 @@ const page = ({ isOpen, onClose, children }) => {
     };
   
     const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [opendrop, setOpendrop] = useState(false);
   const [selectedOptiondrop, setSelectedOptiondrop] = useState("Period");
@@ -130,11 +130,11 @@ const page = ({ isOpen, onClose, children }) => {
     }
 
     setWarning(""); // Clear any existing warning
-    console.log("Assigning:", {
-      selectedOptiondrop,
-      selectedDate,
-      selectedItems,
-    });
+    // console.log("Assigning:", {
+    //   selectedOptiondrop,
+    //   selectedDate,
+    //   selectedItems,
+    // });
   };
 
   const doctorList = [

@@ -33,7 +33,7 @@ const useWindowSize = () => {
 
   useEffect(() => {
     // Make sure this runs only on client
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const handleResize = () => {
         setSize({ width: window.innerWidth, height: window.innerHeight });
       };
@@ -41,8 +41,8 @@ const useWindowSize = () => {
       // Set initial size
       handleResize();
 
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
 
@@ -50,12 +50,11 @@ const useWindowSize = () => {
 };
 
 const page = () => {
-
   const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [selected, setSelected] = useState(0);
-
+  const [userData, setUserData] = useState(null);
   const handleSelect = (index) => {
     setSelected(index);
   };
@@ -184,6 +183,15 @@ const page = () => {
     },
   ];
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log("Retrieved user from localStorage:", parsedUser);
+      setUserData(parsedUser);
+    }
+  }, []);
+
   // To set this sample data in your useState
   useEffect(() => {
     setPatients(samplePatients);
@@ -226,7 +234,9 @@ const page = () => {
             Good Morning
           </h4>
           <h2 className="font-bold text-[#005585] text-2xl md:text-4xl">
-            Mr. Mathew!
+            {userData?.user?.admin_name
+              ? `${userData.user.admin_name}`
+              : "Loading..."}
           </h2>
         </div>
 
@@ -581,7 +591,9 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  53
+                  {userData?.user?.patients_created
+                    ? userData.user.patients_created.length
+                    : "Loading..."}
                 </p>
               </div>
               <p
@@ -610,7 +622,9 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  53
+                  {userData?.user?.doctors_created
+                    ? userData.user.doctors_created.length
+                    : "Loading..."}
                 </p>
               </div>
               <p
@@ -927,9 +941,18 @@ const page = () => {
       </div>
 
       <Patientreport isOpen={isOpen} onClose={() => setIsOpen(false)} />
-      <Patientremainder isOpenrem={isOpenrem} onCloserem={() => setIsOpenrem(false)}/>
-      <Accountcreation isOpenacc={isOpenacc} onCloseacc={() => setIsOpenacc(false)}/>
-      <Accountcreationdoctor isOpenaccdoc={isOpenaccdoc} onCloseaccdoc={() => setIsOpenaccdoc(false)}/>
+      <Patientremainder
+        isOpenrem={isOpenrem}
+        onCloserem={() => setIsOpenrem(false)}
+      />
+      <Accountcreation
+        isOpenacc={isOpenacc}
+        onCloseacc={() => setIsOpenacc(false)}
+      />
+      <Accountcreationdoctor
+        isOpenaccdoc={isOpenaccdoc}
+        onCloseaccdoc={() => setIsOpenaccdoc(false)}
+      />
     </>
   );
 };

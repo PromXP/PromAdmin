@@ -60,7 +60,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
   
     const { width, height } = useWindowSize();
 
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
   const [message, setMessage] = useState("");
 
   const [showAlert, setShowAlert] = useState(false);
@@ -168,71 +168,66 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
   };
 
   const [alertMessage, setAlertMessage] = useState("");
+  const [userData, setUserData] = useState(null);
+    useEffect(() => {
+        const storedUser = localStorage.getItem("userData");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log("Retrieved user from localStorage:", parsedUser);
+          setUserData(parsedUser);
+        }
+      }, []);
 
-  const handleSendremainder = () => {
-    if (!firstName.trim()) {
-      showWarning("First Name is required.");
-      return;
-    }
-
-    if (!lastName.trim()) {
-      showWarning("Last Name is required.");
-      return;
-    }
-
-    if (!uhid.trim()) {
-      showWarning("UHID is required.");
-      return;
-    }
-
-    if (!selectedDate.trim()) {
-      showWarning("Date is required.");
-      return;
-    }
-
-    if (!selectedGender.trim()) {
-      showWarning("Gender is required.");
-      return;
-    }
-
-    if (selectedOptiondrop === "Select") {
-      showWarning("Blood group must be selected.");
-      return;
-    }
-
-    if (!phone.trim()) {
-      showWarning("Phone number is required.");
-      return;
-    }
-
-    if (!email.trim()) {
-      showWarning("Email is required.");
-      return;
-    }
-
-    if (!heightbmi.trim()) {
-      showWarning("Height is required.");
-      return;
-    }
-
-    if (!weight.trim()) {
-      showWarning("Weight is required.");
-      return;
-    }
-
-    // All validations passed
-    console.log("Sending Reminder:", {
-      firstName,
-      lastName,
-      uhid,
-      selectedDate,
-      selectedGender,
-      selectedOptiondrop,
-      phone,
-    });
-
-    // Send logic goes here
-  };
+      const handleSendremainder = async () => {
+        if (!firstName.trim()) return showWarning("First Name is required.");
+        if (!uhid.trim()) return showWarning("UHID is required.");
+        if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
+        if (!selectedGender.trim()) return showWarning("Gender is required.");
+        if (!phone.trim()) return showWarning("Phone number is required.");
+        if (!email.trim()) return showWarning("Email is required.");
+      
+        // Calculate age from selectedDate (DOB)
+        const birthYear = new Date(selectedDate).getFullYear();
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - birthYear;
+      
+        const payload = {
+          doctor_name: firstName.trim() +" "+ lastName.trim(),
+          gender: selectedGender.trim(),
+          age: age,
+          email: email.trim(),
+          uhid: uhid.trim(),
+          phone_number: phone.trim(),
+          password: "doctor@123",
+          admin_created: userData?.user?.email,
+          patients_assigned: [],
+        };
+      
+        try {
+          const response = await fetch("https://promapi.onrender.com/registerdoctor", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+      
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error response:", errorData);
+            throw new Error(errorData?.detail || "Failed to register doctor.");
+          }
+      
+          const result = await response.json();
+          console.log("Doctor registration successful:", result);
+          onCloseaccdoc(); // If you have a modal or dialog to close
+        } catch (error) {
+          console.error("Error submitting doctor data:", error);
+          showWarning("Something went wrong. Please try again.");
+        }
+      };
+      
+  
 
   const showWarning = (message) => {
     setAlertMessage(message);

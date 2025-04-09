@@ -60,12 +60,11 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
   
     const { width, height } = useWindowSize();
 
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
   const [message, setMessage] = useState("");
 
   const [showAlert, setShowAlert] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState("");
   const dateInputRef = useRef(null);
 
   const openDatePicker = () => {
@@ -84,10 +83,7 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
     }
   };
 
-  const [selectedGender, setSelectedGender] = useState(""); // "female" | "male" | "other"
-
   const [opendrop, setOpendrop] = useState(false);
-  const [selectedOptiondrop, setSelectedOptiondrop] = useState("Select");
 
   const optionsdrop = [
     "A+",
@@ -129,28 +125,27 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
     setOpendrop(false);
   };
 
-  const [heightbmi, setHeightbmi] = useState("");
-  const [weight, setWeight] = useState("");
-  const [bmi, setBmi] = useState("");
-
   // Auto calculate BMI whenever height or weight changes
-  useEffect(() => {
-    const h = parseFloat(heightbmi);
-    const w = parseFloat(weight);
 
-    if (h > 0 && w > 0) {
-      const bmiVal = w / ((h / 100) * (h / 100));
-      setBmi(bmiVal.toFixed(2));
-    } else {
-      setBmi("");
-    }
-  }, [heightbmi, weight]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [uhid, setUhid] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [heightbmi, setHeightbmi] = useState("");
+  const [weight, setWeight] = useState("");
+  const [bmi, setBmi] = useState("");
+  const [selectedGender, setSelectedGender] = useState(""); // "female" | "male" | "other"
+  const [doctorAssigned, setDoctorAssigned] = useState("");
+  const [adminAssigned, setAdminAssigned] = useState("");
+  const [password, setPassword] = useState("");
+  const [age, setAge] = useState(0);
+  const [selectedOptiondrop, setSelectedOptiondrop] = useState("Select");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  
+  
 
   const clearAllFields = () => {
     setFirstName("");
@@ -168,77 +163,114 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
   };
 
   const [alertMessage, setAlertMessage] = useState("");
+const [userData, setUserData] = useState(null);
+  useEffect(() => {
+      const storedUser = localStorage.getItem("userData");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Retrieved user from localStorage:", parsedUser);
+        setUserData(parsedUser);
+      }
+    }, []);
 
-  const handleSendremainder = () => {
-    if (!firstName.trim()) {
-      showWarning("First Name is required.");
-      return;
+  const handleSendremainder = async () => {
+    if (!firstName.trim()) return showWarning("First Name is required.");
+    if (!lastName.trim()) return showWarning("Last Name is required.");
+    if (!uhid.trim()) return showWarning("UHID is required.");
+    if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
+    if (!selectedGender.trim()) return showWarning("Gender is required.");
+    if (selectedOptiondrop === "Select") return showWarning("Blood group must be selected.");
+    if (!phone.trim()) return showWarning("Phone number is required.");
+    if (!email.trim()) return showWarning("Email is required.");
+    if (!heightbmi.trim()) return showWarning("Height is required.");
+    if (!weight.trim()) return showWarning("Weight is required.");
+  
+    // Calculate age (simple version, assuming DOB format: "YYYY-MM-DD")
+    const birthYear = new Date(selectedDate).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+  
+    // Calculate BMI
+    const heightInMeters = parseFloat(heightbmi) / 100;
+    const bmi = parseFloat(weight) / (heightInMeters * heightInMeters);
+  
+    const payload = {
+      uhid: uhid,
+      first_name: firstName,
+      last_name: lastName,
+      password: "patient@123", // change as needed
+      dob: selectedDate,
+      age: age,
+      blood_grp: selectedOptiondrop,
+      gender: selectedGender,
+      height: parseFloat(heightbmi),
+      weight: parseFloat(weight),
+      bmi: parseFloat(bmi.toFixed(2)),
+      email: email,
+      phone_number: phone,
+      doctor_assigned: "Dr. Smith", // replace with real data
+      admin_assigned: userData?.user?.email, // replace with real data
+      questionnaire_assigned: [],
+      questionnaire_scores: [],
+      surgery_scheduled: {
+        date: "2025-04-15", // replace with actual selected date
+        time: "10:30 AM",    // replace with actual selected time
+      },
+      post_surgery_details: {
+        date_of_surgery: "2025-04-09",
+        surgeon: "Dr. XYZ",            // replace accordingly
+        surgeon_name: "Dr. XYZ",       // if different
+        procedure: "Knee Replacement", // replace
+        implant: "Titanium X",         // replace
+        technology: "Robotic Assist",  // replace
+      },
+      current_status: "pre_op",
+    };
+  
+    try {
+      const response = await fetch("https://promapi.onrender.com/registerpatient", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        
+      });
+      console.log("Submission successful:", payload);
+      if (!response.ok) {
+        throw new Error("Failed to send data.");
+      }
+  
+      const result = await response.json();
+      console.log("Submission successful:", result);
+      onCloseacc();
+      // Optionally, show success message here
+    } catch (error) {
+      console.error("Error submitting data:", error);
+      showWarning("Something went wrong. Please try again.");
     }
-
-    if (!lastName.trim()) {
-      showWarning("Last Name is required.");
-      return;
-    }
-
-    if (!uhid.trim()) {
-      showWarning("UHID is required.");
-      return;
-    }
-
-    if (!selectedDate.trim()) {
-      showWarning("Date is required.");
-      return;
-    }
-
-    if (!selectedGender.trim()) {
-      showWarning("Gender is required.");
-      return;
-    }
-
-    if (selectedOptiondrop === "Select") {
-      showWarning("Blood group must be selected.");
-      return;
-    }
-
-    if (!phone.trim()) {
-      showWarning("Phone number is required.");
-      return;
-    }
-
-    if (!email.trim()) {
-      showWarning("Email is required.");
-      return;
-    }
-
-    if (!heightbmi.trim()) {
-      showWarning("Height is required.");
-      return;
-    }
-
-    if (!weight.trim()) {
-      showWarning("Weight is required.");
-      return;
-    }
-
-    // All validations passed
-    console.log("Sending Reminder:", {
-      firstName,
-      lastName,
-      uhid,
-      selectedDate,
-      selectedGender,
-      selectedOptiondrop,
-      phone,
-    });
-
-    // Send logic goes here
   };
+  
+  useEffect(() => {
+    const h = parseFloat(heightbmi);
+    const w = parseFloat(weight);
+
+    if (h > 0 && w > 0) {
+      const bmiVal = w / ((h / 100) * (h / 100));
+      setBmi(bmiVal.toFixed(2));
+    } else {
+      setBmi("");
+    }
+  }, [heightbmi, weight]);
 
   const showWarning = (message) => {
     setAlertMessage(message);
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 4000);
   };
+
+
+  
 
   if (!isOpenacc) return null;
   return (
