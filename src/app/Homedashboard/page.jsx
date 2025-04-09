@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 import Image from "next/image";
 
@@ -60,128 +61,6 @@ const page = () => {
   };
 
   const [patients, setPatients] = useState([]);
-  const samplePatients = [
-    {
-      _id: "1",
-      user_id: "JohnDoe",
-      unique_id: "PAT001",
-      PersonalDetails: { Age: 29, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "2",
-      user_id: "JaneSmith",
-      unique_id: "PAT002",
-      PersonalDetails: { Age: 34, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "3",
-      user_id: "MikeJohnson",
-      unique_id: "PAT003",
-      PersonalDetails: { Age: 42, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "4",
-      user_id: "EmilyDavis",
-      unique_id: "PAT004",
-      PersonalDetails: { Age: 26, Gender: "Female" },
-      surgeryStatus: "6M",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "5",
-      user_id: "DavidMiller",
-      unique_id: "PAT005",
-      PersonalDetails: { Age: 37, Gender: "Male" },
-      surgeryStatus: "1Y",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "6",
-      user_id: "SarahWilson",
-      unique_id: "PAT006",
-      PersonalDetails: { Age: 31, Gender: "Female" },
-      surgeryStatus: "2Y",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "7",
-      user_id: "RobertBrown",
-      unique_id: "PAT007",
-      PersonalDetails: { Age: 45, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "8",
-      user_id: "OliviaTaylor",
-      unique_id: "PAT008",
-      PersonalDetails: { Age: 28, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "9",
-      user_id: "DanielAnderson",
-      unique_id: "PAT009",
-      PersonalDetails: { Age: 39, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "10",
-      user_id: "SophiaMartinez",
-      unique_id: "PAT010",
-      PersonalDetails: { Age: 33, Gender: "Female" },
-      surgeryStatus: "6M",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "11",
-      user_id: "MatthewThomas",
-      unique_id: "PAT011",
-      PersonalDetails: { Age: 27, Gender: "Male" },
-      surgeryStatus: "1Y",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "12",
-      user_id: "EmmaWhite",
-      unique_id: "PAT012",
-      PersonalDetails: { Age: 30, Gender: "Female" },
-      surgeryStatus: "2Y",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "13",
-      user_id: "JamesHarris",
-      unique_id: "PAT013",
-      PersonalDetails: { Age: 41, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "14",
-      user_id: "IsabellaClark",
-      unique_id: "PAT014",
-      PersonalDetails: { Age: 36, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "15",
-      user_id: "WilliamLewis",
-      unique_id: "PAT015",
-      PersonalDetails: { Age: 38, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-  ];
 
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
@@ -193,9 +72,6 @@ const page = () => {
   }, []);
 
   // To set this sample data in your useState
-  useEffect(() => {
-    setPatients(samplePatients);
-  }, []);
 
   const [patfilter, setpatFilter] = useState("All PATIENTS");
 
@@ -206,16 +82,16 @@ const page = () => {
   // Load selected option from localStorage or default to "ALL"
   const [postopfilter, setpostopFitler] = useState("ALL");
 
-  const patientData = [
-    { name: "Bennett", surgeryStatus: "6W", completed: 5, pending: 2 },
-    { name: "Sophia", surgeryStatus: "3M", completed: 8, pending: 0 },
-    { name: "Liam", surgeryStatus: "6M", completed: 12, pending: 3 },
-    { name: "Olivia", surgeryStatus: "1Y", completed: 20, pending: 4 },
-    { name: "Noah", surgeryStatus: "2Y", completed: 15, pending: 0 },
-    { name: "Emma", surgeryStatus: "6W", completed: 9, pending: 0 },
-    { name: "Mason", surgeryStatus: "3M", completed: 7, pending: 0 },
-    { name: "Ava", surgeryStatus: "1Y", completed: 11, pending: 3 },
-  ];
+  // const patientData = [
+  //   { name: "Bennett", surgeryStatus: "6W", completed: 5, pending: 2 },
+  //   { name: "Sophia", surgeryStatus: "3M", completed: 8, pending: 0 },
+  //   { name: "Liam", surgeryStatus: "6M", completed: 12, pending: 3 },
+  //   { name: "Olivia", surgeryStatus: "1Y", completed: 20, pending: 4 },
+  //   { name: "Noah", surgeryStatus: "2Y", completed: 15, pending: 0 },
+  //   { name: "Emma", surgeryStatus: "6W", completed: 9, pending: 0 },
+  //   { name: "Mason", surgeryStatus: "3M", completed: 7, pending: 0 },
+  //   { name: "Ava", surgeryStatus: "1Y", completed: 11, pending: 3 },
+  // ];
 
   const [patprogressfilter, setpatprogressFilter] = useState("ALL");
 
@@ -225,6 +101,63 @@ const page = () => {
   const [isOpenrem, setIsOpenrem] = useState(false);
   const [isOpenacc, setIsOpenacc] = useState(false);
   const [isOpenaccdoc, setIsOpenaccdoc] = useState(false);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (!userData?.user?.email) return;
+      console.log("DATA", userData?.user?.email);
+      try {
+        const res = await axios.get(
+          `https://promapi.onrender.com/patients/by-admin/${userData?.user?.email}`
+        );
+        const data = res.data;
+
+        // Optional: Add any transformation or filtering logic here if needed
+        setPatients(data);
+        console.log("DATA", patients);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+
+    fetchPatients();
+  }, [userData?.user?.email]);
+
+  const filteredPatients = patients.filter((patient) => {
+    const status = patient.current_status.toLowerCase();
+    const selectedFilter = patfilter.toLowerCase();
+    const subFilter = postopfilter.toLowerCase();
+
+    if (selectedFilter === "all patients") {
+      return true;
+    }
+
+    if (selectedFilter === "pre operative") {
+      return status.includes("pre");
+    }
+
+    // Anything not "pre" is treated as post-operative
+    if (selectedFilter === "post operative") {
+      if (subFilter === "all") {
+        return !status.includes("pre");
+      }
+      return !status.includes("pre") && status.includes(subFilter);
+    }
+
+    return false;
+  });
+
+  const displayedPatients = patients.filter((patient) => {
+    const status = patient.current_status?.toLowerCase() || "";
+    const selectedFilter = patprogressfilter.toLowerCase();
+
+    if (selectedFilter === "all") return true;
+    if (selectedFilter === "pre op") return status.includes("pre");
+    if (selectedFilter === "post op") return !status.includes("pre");
+
+    return false;
+  });
+
   return (
     <>
       <div className="flex flex-col md:flex-row w-[95%] mx-auto mt-4 items-center justify-between">
@@ -395,9 +328,9 @@ const page = () => {
                 : "h-[90%]"
             }`}
           >
-            {patients.map((patient) => (
+            {filteredPatients.map((patient) => (
               <div
-                key={patient._id}
+                key={patient.uhid}
                 style={{ backgroundColor: "rgba(0, 85, 133, 0.1)" }}
                 className={`w-full rounded-lg flex  my-1 py-2 px-3 ${
                   width < 530
@@ -450,7 +383,7 @@ const page = () => {
                               width < 530 ? "w-full text-center" : ""
                             }`}
                           >
-                            {patient.user_id}
+                            {patient.first_name + " " + patient.last_name}
                           </p>
                         </div>
                         <p
@@ -458,8 +391,7 @@ const page = () => {
                             width < 530 ? "text-center" : "text-start"
                           }`}
                         >
-                          {patient.PersonalDetails.Age},{" "}
-                          {patient.PersonalDetails.Gender}
+                          {patient.age}, {patient.gender}
                         </p>
                       </div>
 
@@ -472,7 +404,7 @@ const page = () => {
                             : "w-[30%] text-center"
                         }`}
                       >
-                        UHID {patient.unique_id}
+                        UHID {patient.uhid}
                       </div>
                     </div>
                   </div>
@@ -506,7 +438,7 @@ const page = () => {
                           : "w-[35%] text-end"
                       }`}
                     >
-                      {patient.surgeryStatus}
+                      {patient.current_status}
                     </div>
                     <div
                       className={`text-sm font-medium text-black ${
@@ -517,7 +449,13 @@ const page = () => {
                           : "w-[65%] text-end"
                       }`}
                     >
-                      {patient.questionnaireStatus}
+                      {patient.questionnaire_assigned?.length === 0
+                        ? "NOT ASSIGNED"
+                        : patient.questionnaire_assigned.every(
+                            (q) => q.completed === 0
+                          )
+                        ? "PENDING"
+                        : "COMPLETED"}
                     </div>
                   </div>
 
@@ -591,9 +529,7 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  {userData?.user?.patients_created
-                    ? userData.user.patients_created.length
-                    : "Loading..."}
+                  {userData?.user?.patients_created?.length ?? "Loading..."}
                 </p>
               </div>
               <p
@@ -622,9 +558,7 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  {userData?.user?.doctors_created
-                    ? userData.user.doctors_created.length
-                    : "Loading..."}
+                  {userData?.user?.doctors_created?.length ?? "Loading..."}
                 </p>
               </div>
               <p
@@ -651,7 +585,7 @@ const page = () => {
               {width >= 1272 && (
                 <div className="w-full h-[90%] flex flex-row justify-start gap-2">
                   <div className="justify-start grid grid-cols-2  w-5/6 h-full overflow-y-scroll flex-grow ">
-                    {patientData.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
                         onClick={() => setIsOpenrem(true)}
@@ -743,7 +677,7 @@ const page = () => {
                   </div>
 
                   <div className="justify-center grid grid-cols-2  w-full h-full overflow-y-scroll flex-grow ">
-                    {patientData.map((item, index) => (
+                    {patients.map((item, index) => (
                       <div
                         key={index}
                         onClick={() => setIsOpenrem(true)}
@@ -817,16 +751,16 @@ const page = () => {
                   </div>
 
                   <div className="flex flex-row overflow-x-scroll w-full h-full p-2 space-x-5">
-                    {patientData.map((item, index) => (
+                    {patients.map((item, index) => (
                       <div
                         key={index}
                         onClick={() => setIsOpenrem(true)}
                         className={`min-w-[140px] bg-white shadow-md rounded-xl p-2.5 relative flex flex-col justify-between 
-        ${
-          item.pending > 0
-            ? "shadow-lg shadow-red-500 cursor-pointer"
-            : "shadow-md shadow-gray-300"
-        }`}
+                        ${
+                          item.pending > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
                         {item.pending > 0 && (
