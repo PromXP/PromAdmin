@@ -55,6 +55,7 @@ const page = () => {
   // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [selected, setSelected] = useState(0);
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [userData, setUserData] = useState(null);
   const handleSelect = (index) => {
     setSelected(index);
@@ -101,11 +102,11 @@ const page = () => {
   const [isOpenrem, setIsOpenrem] = useState(false);
   const [isOpenacc, setIsOpenacc] = useState(false);
   const [isOpenaccdoc, setIsOpenaccdoc] = useState(false);
+    const [doctorList, setDoctorList] = useState([]);
 
   useEffect(() => {
     const fetchPatients = async () => {
       if (!userData?.user?.email) return;
-      console.log("DATA", userData?.user?.email);
       try {
         const res = await axios.get(
           `https://promapi.onrender.com/patients/by-admin/${userData?.user?.email}`
@@ -114,7 +115,6 @@ const page = () => {
 
         // Optional: Add any transformation or filtering logic here if needed
         setPatients(data);
-        console.log("DATA", patients);
       } catch (err) {
         console.error("Failed to fetch patients", err);
       }
@@ -122,6 +122,25 @@ const page = () => {
 
     fetchPatients();
   }, [userData?.user?.email]);
+
+    useEffect(() => {
+      const fetchDoctors = async () => {
+        try {
+          console.log("HIIII",userData?.user?.email)
+          const res = await fetch(`https://promapi.onrender.com/doctors/by-admin/${userData?.user?.email}`);
+          const data = await res.json();
+          console.log("Fetched doctor list:", data); // Should appear
+          const formatted = data.map(doc => `${doc.doctor_name} - ${doc.email}`);
+          setDoctorList(formatted);
+        } catch (error) {
+          console.error("Error fetching doctors:", error);
+        }
+      };
+    
+      if (userData?.user?.email) {
+        fetchDoctors();
+      }
+    }, [userData?.user?.email]);
 
   const filteredPatients = patients.filter((patient) => {
     const status = patient.current_status.toLowerCase();
@@ -158,6 +177,7 @@ const page = () => {
     return false;
   });
 
+  
   return (
     <>
       <div className="flex flex-col md:flex-row w-[95%] mx-auto mt-4 items-center justify-between">
@@ -364,7 +384,7 @@ const page = () => {
                           : "w-10 h-10"
                       }`}
                       src={Patientimg}
-                      alt={patient.user_id}
+                      alt={patient.uhid}
                     />
 
                     <div
@@ -472,7 +492,10 @@ const page = () => {
                           ? "w-full justify-center"
                           : ""
                       }`}
-                      onClick={() => setIsOpen(true)}
+                      onClick={() => {
+                        setSelectedPatient(patient);
+                        setIsOpen(true);
+                      }}
                     >
                       <div className="text-sm font-medium border-b-2 text-[#476367] border-blue-gray-500 cursor-pointer">
                         Report
@@ -590,14 +613,18 @@ const page = () => {
                         key={index}
                         onClick={() => setIsOpenrem(true)}
                         className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-2 relative flex flex-col justify-between 
-                              ${
-                                item.pending > 0
-                                  ? "shadow-lg shadow-red-500 cursor-pointer"
-                                  : "shadow-md shadow-gray-300"
-                              }`}
+                        ${
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -606,12 +633,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -620,7 +647,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -630,7 +659,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -677,19 +708,23 @@ const page = () => {
                   </div>
 
                   <div className="justify-center grid grid-cols-2  w-full h-full overflow-y-scroll flex-grow ">
-                    {patients.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
                         onClick={() => setIsOpenrem(true)}
                         className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-1 relative flex flex-col justify-between 
-                              ${
-                                item.pending > 0
-                                  ? "shadow-lg shadow-red-500 cursor-pointer"
-                                  : "shadow-md shadow-gray-300"
-                              }`}
+                          ${
+                            item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length > 0
+                              ? "shadow-lg shadow-red-500 cursor-pointer"
+                              : "shadow-md shadow-gray-300"
+                          }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -698,12 +733,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -712,7 +747,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -722,7 +759,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -751,19 +790,23 @@ const page = () => {
                   </div>
 
                   <div className="flex flex-row overflow-x-scroll w-full h-full p-2 space-x-5">
-                    {patients.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
                         onClick={() => setIsOpenrem(true)}
                         className={`min-w-[140px] bg-white shadow-md rounded-xl p-2.5 relative flex flex-col justify-between 
-                        ${
-                          item.pending > 0
-                            ? "shadow-lg shadow-red-500 cursor-pointer"
-                            : "shadow-md shadow-gray-300"
-                        }`}
+                          ${
+                            item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length > 0
+                              ? "shadow-lg shadow-red-500 cursor-pointer"
+                              : "shadow-md shadow-gray-300"
+                          }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -772,12 +815,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -786,7 +829,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -796,7 +841,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -874,7 +921,13 @@ const page = () => {
         </div>
       </div>
 
-      <Patientreport isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <Patientreport
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        patient={selectedPatient}
+        doctor={doctorList}
+      />
+
       <Patientremainder
         isOpenrem={isOpenrem}
         onCloserem={() => setIsOpenrem(false)}

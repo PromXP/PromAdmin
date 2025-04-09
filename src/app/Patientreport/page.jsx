@@ -31,30 +31,30 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = ({ isOpen, onClose, children }) => {
+const page = ({ isOpen, onClose, patient, doctor }) => {
   const useWindowSize = () => {
-      const [size, setSize] = useState({
-        width: 0,
-        height: 0,
-      });
-    
-      useEffect(() => {
-        const updateSize = () => {
-          setSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        };
-    
-        updateSize(); // set initial size
-        window.addEventListener("resize", updateSize);
-        return () => window.removeEventListener("resize", updateSize);
-      }, []);
-    
-      return size;
-    };
-  
-    const { width, height } = useWindowSize();
+    const [size, setSize] = useState({
+      width: 0,
+      height: 0,
+    });
+
+    useEffect(() => {
+      const updateSize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+
+      updateSize(); // set initial size
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }, []);
+
+    return size;
+  };
+
+  const { width, height } = useWindowSize();
   // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [opendrop, setOpendrop] = useState(false);
@@ -113,7 +113,7 @@ const page = ({ isOpen, onClose, children }) => {
 
   const [warning, setWarning] = useState("");
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!selectedOptiondrop || selectedOptiondrop === "Period") {
       setWarning("Please select a Time Period");
       return;
@@ -130,21 +130,62 @@ const page = ({ isOpen, onClose, children }) => {
     }
 
     setWarning(""); // Clear any existing warning
-    // console.log("Assigning:", {
-    //   selectedOptiondrop,
-    //   selectedDate,
-    //   selectedItems,
-    // });
+
+    const payload = {
+      uhid: patient.uhid, // Ensure `patient` is accessible in this scope
+      questionnaire_assigned: selectedItems.map((item) => ({
+        name: item,
+        period: selectedOptiondrop,
+        timestamp: selectedDate,
+        completed: 0,
+      })),
+    };
+
+    try {
+      const response = await fetch(
+        "https://promapi.onrender.com/add-questionnaire",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("API Error:", error);
+        setWarning("Something went wrong. Please try again.");
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Successfully assigned:", result);
+
+      // Optionally reset the fields
+      setSelectedItems([]);
+      setSelectedOptiondrop("Period");
+      setSelectedDate("");
+
+      setWarning("Questionnaires successfully assigned!");
+      setTimeout(() => setWarning(""), 3000);
+    } catch (err) {
+      console.error("Network error:", err);
+      setWarning("Network error. Please try again.");
+    }
   };
 
-  const doctorList = [
-    "Dr. Jacob - Knee Surgeon",
-    "Dr. Malcom - Knee Surgeon",
-    "Dr. Lisa - Knee Surgeon",
-    "Dr. Andrew - Knee Physician",
-    "Dr. Leo - Knee Surgeon",
-    "Dr. Jane - Knee Physician",
-  ];
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log("Retrieved user from localStorage:", parsedUser);
+      setUserData(parsedUser);
+    }
+  }, []);
 
   const [searchTermdoc, setSearchTermdoc] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -158,12 +199,48 @@ const page = ({ isOpen, onClose, children }) => {
     setSelectedDoctor("");
   };
 
-  const handleAssigndoc = () => {
+  const handleAssigndoc = async () => {
     if (!selectedDoctor) {
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2500);
+      return;
+    }
+  
+    const doctorName = selectedDoctor.split(" - ")[0]; // Extract email
+    const patientUhid = patient?.uhid; // Replace this with your selected patient value
+  
+    if (!patientUhid) {
+      console.error("No patient selected for assignment.");
+      return;
+    }
+  
+    const payload = {
+      uhid: patient.uhid,
+      doctor_assigned: doctorName,
+    };
+  
+    try {
+      const response = await fetch("https://promapi.onrender.com/update-doctor", {
+        method: "PUT", // or "PUT" depending on your backend
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log("Doctor assigned successfully:", result);
+      // You can show a success message here or refresh data
+  
+    } catch (error) {
+      console.error("Error assigning doctor:", error);
     }
   };
+  
 
   const [selectedDatesurgery, setSelectedDatesurgery] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -198,20 +275,55 @@ const page = ({ isOpen, onClose, children }) => {
     setSelectedTime("");
   };
 
-  const handleAssignsurgery = () => {
+  const handleAssignsurgery = async () => {
     if (!selectedDatesurgery || !selectedTime) {
       setWarning("Please select both date and time.");
       return;
     }
-
+  
     const selectedDateTime = new Date(`${selectedDatesurgery}T${selectedTime}`);
     const now = new Date();
-
+  
     if (selectedDateTime < now) {
       setWarning("Selected date and time cannot be in the past.");
       return;
     }
+  
+    if (!patient?.uhid) {
+      console.error("No patient selected for surgery scheduling.");
+      return;
+    }
+  
+    const payload = {
+      uhid: patient.uhid,
+      surgery_scheduled: {
+        date: selectedDatesurgery,
+        time: selectedTime,
+      },
+    };
+  
+    try {
+      const response = await fetch("https://promapi.onrender.com/update-surgery-schedule", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log("Surgery scheduled successfully:", result);
+      // Optionally reset form or show success feedback
+  
+    } catch (error) {
+      console.error("Error scheduling surgery:", error);
+    }
   };
+  
 
   const columns = ["SCORE", "Preop", "6W", "3M", "6M", "1Y", "2Y"];
 
@@ -324,7 +436,7 @@ const page = ({ isOpen, onClose, children }) => {
                               width < 530 ? "text-start" : ""
                             }`}
                           >
-                            ALEX HALES
+                            {patient.first_name + " " + patient.last_name}
                           </p>
                         </div>
                         <div
@@ -340,14 +452,14 @@ const page = ({ isOpen, onClose, children }) => {
                             }
                           w-1/2`}
                           >
-                            25, Male
+                            {patient.age}, {patient.gender}
                           </p>
                           <div
                             className={`text-sm font-normal font-poppins text-[#475467] w-1/2 ${
                               width < 530 ? "text-center" : ""
                             }`}
                           >
-                            UHID 12345678
+                            UHID {patient.uhid}
                           </div>
                         </div>
                       </div>
@@ -373,7 +485,7 @@ const page = ({ isOpen, onClose, children }) => {
                             BMI
                           </p>
                           <p className="text-[#04CE00] font-bold text-6">
-                            22.8
+                            {patient.bmi}
                           </p>
                         </div>
                         <div
@@ -387,7 +499,9 @@ const page = ({ isOpen, onClose, children }) => {
                             DOCTOR ASSIGNED
                           </p>
                           <p className="text-black font-bold text-6">
-                            Dr. Jacob
+                            {patient.doctor_assigned
+                              ? patient.doctor_assigned
+                              : "-"}
                           </p>
                         </div>
                         <div
@@ -401,7 +515,7 @@ const page = ({ isOpen, onClose, children }) => {
                             STATUS
                           </p>
                           <p className="text-[#FFB978] font-bold text-6">
-                            PRE OPERATIVE
+                            {patient.current_status}
                           </p>
                         </div>
                       </div>
@@ -427,8 +541,18 @@ const page = ({ isOpen, onClose, children }) => {
               <h2 className="font-bold text-black text-7">
                 ASSIGN QUESTIONNAIRES
               </h2>
-              <div className={`w-full flex  ${width<470?"flex-col justify-center items-center gap-2":"flex-row"}`}>
-                <div className={`w-[75%] flex flex-row  ${width<470?"justify-between":"gap-4"}`}>
+              <div
+                className={`w-full flex  ${
+                  width < 470
+                    ? "flex-col justify-center items-center gap-2"
+                    : "flex-row"
+                }`}
+              >
+                <div
+                  className={`w-[75%] flex flex-row  ${
+                    width < 470 ? "justify-between" : "gap-4"
+                  }`}
+                >
                   <div className="w-[40%] flex flex-row justify-between items-center">
                     <input
                       type="text"
@@ -475,8 +599,14 @@ const page = ({ isOpen, onClose, children }) => {
                     )}
                   </div>
                 </div>
-                <div className={`flex flex-row  items-center  cursor-pointer ${width<470?"w-full gap-4 justify-center":"w-[25%] justify-between"}`}
-                onClick={openDatePicker}>
+                <div
+                  className={`flex flex-row  items-center  cursor-pointer ${
+                    width < 470
+                      ? "w-full gap-4 justify-center"
+                      : "w-[25%] justify-between"
+                  }`}
+                  onClick={openDatePicker}
+                >
                   <p className="font-medium italic text-[#475467] text-sm">
                     {selectedDate || "DEADLINE"}
                   </p>
@@ -487,11 +617,7 @@ const page = ({ isOpen, onClose, children }) => {
                       onChange={handleDateChange}
                       className="absolute opacity-0 pointer-events-none"
                     />
-                    <Image
-                      src={Calendar}
-                      className="w-3 h-3 "
-                      alt="Calendar"
-                    />
+                    <Image src={Calendar} className="w-3 h-3 " alt="Calendar" />
                   </div>
                 </div>
               </div>
@@ -589,13 +715,14 @@ const page = ({ isOpen, onClose, children }) => {
                 }`}
               >
                 <div className="flex flex-wrap gap-2">
-                  {doctorList
+                  {doctor
                     .filter((item) =>
                       item.toLowerCase().includes(searchTermdoc.toLowerCase())
                     )
                     .map((item, index) => {
                       const [name, designation] = item.split(" - ");
                       const isSelected = selectedDoctor === item;
+
                       return (
                         <label
                           key={index}
