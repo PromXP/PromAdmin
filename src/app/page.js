@@ -198,10 +198,12 @@ export default function Home() {
             <div className="w-full max-w-lg flex flex-col gap-8">
               <div className="relative w-full">
                 <label className="absolute left-4 -top-2 bg-white px-1 text-[#005585] text-sm">
-                  Username
+                Email / Phone / UHID
                 </label>
                 <input
                   type="text"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full text-black py-3 px-4 border-[1.6px] border-[#79747E] rounded-sm text-lg focus:border-[#005585] outline-none"
                 />
               </div>
@@ -212,6 +214,8 @@ export default function Home() {
                 </label>
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full text-black py-3 px-4 border-[1.6px] border-[#79747E] rounded-sm text-lg focus:border-[#005585] outline-none"
                 />
               </div>
@@ -236,7 +240,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer" onClick={() => router.push("/Landing")}>
+              <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer" onClick={handleLogin}>
                 Login
               </button>
             </div>

@@ -219,7 +219,7 @@ const [userData, setUserData] = useState(null);
       post_surgery_details: {
         date_of_surgery: "2025-04-09",
         surgeon: "Dr. XYZ",            // replace accordingly
-        surgeon_name: "Dr. XYZ",       // if different
+        surgery_name: "Dr. XYZ",       // if different
         procedure: "Knee Replacement", // replace
         implant: "Titanium X",         // replace
         technology: "Robotic Assist",  // replace

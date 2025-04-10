@@ -102,7 +102,7 @@ const page = () => {
   const [isOpenrem, setIsOpenrem] = useState(false);
   const [isOpenacc, setIsOpenacc] = useState(false);
   const [isOpenaccdoc, setIsOpenaccdoc] = useState(false);
-    const [doctorList, setDoctorList] = useState([]);
+  const [doctorList, setDoctorList] = useState([]);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -123,24 +123,28 @@ const page = () => {
     fetchPatients();
   }, [userData?.user?.email]);
 
-    useEffect(() => {
-      const fetchDoctors = async () => {
-        try {
-          console.log("HIIII",userData?.user?.email)
-          const res = await fetch(`https://promapi.onrender.com/doctors/by-admin/${userData?.user?.email}`);
-          const data = await res.json();
-          console.log("Fetched doctor list:", data); // Should appear
-          const formatted = data.map(doc => `${doc.doctor_name} - ${doc.email}`);
-          setDoctorList(formatted);
-        } catch (error) {
-          console.error("Error fetching doctors:", error);
-        }
-      };
-    
-      if (userData?.user?.email) {
-        fetchDoctors();
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        console.log("HIIII", userData?.user?.email);
+        const res = await fetch(
+          `https://promapi.onrender.com/doctors/by-admin/${userData?.user?.email}`
+        );
+        const data = await res.json();
+        console.log("Fetched doctor list:", data); // Should appear
+        const formatted = data.map(
+          (doc) => `${doc.doctor_name} - ${doc.email}`
+        );
+        setDoctorList(formatted);
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
       }
-    }, [userData?.user?.email]);
+    };
+
+    if (userData?.user?.email) {
+      fetchDoctors();
+    }
+  }, [userData?.user?.email]);
 
   const filteredPatients = patients.filter((patient) => {
     const status = patient.current_status.toLowerCase();
@@ -177,14 +181,13 @@ const page = () => {
     return false;
   });
 
-  
   return (
     <>
       <div className="flex flex-col md:flex-row w-[95%] mx-auto mt-4 items-center justify-between">
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row items-center md:items-end gap-1 md:gap-4">
           <h4 className="font-medium text-black text-xl md:text-[26px]">
-            Good Morning
+            Welcome
           </h4>
           <h2 className="font-bold text-[#005585] text-2xl md:text-4xl">
             {userData?.user?.admin_name
@@ -611,15 +614,24 @@ const page = () => {
                     {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
-                        className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-2 relative flex flex-col justify-between 
-                        ${
+                        onClick={
                           item.questionnaire_assigned?.filter(
                             (q) => q.completed === 0
                           ).length > 0
-                            ? "shadow-lg shadow-red-500 cursor-pointer"
-                            : "shadow-md shadow-gray-300"
-                        }`}
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
+                        className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-2 relative flex flex-col justify-between 
+                       ${
+                         item.questionnaire_assigned?.filter(
+                           (q) => q.completed === 0
+                         ).length > 0
+                           ? "shadow-lg shadow-red-500 cursor-pointer"
+                           : "shadow-md shadow-gray-300"
+                       }`}
                       >
                         {/* Top Right Arrow Icon */}
                         {item.questionnaire_assigned?.filter(
@@ -711,15 +723,24 @@ const page = () => {
                     {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
+                        onClick={
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
                         className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-1 relative flex flex-col justify-between 
-                          ${
-                            item.questionnaire_assigned?.filter(
-                              (q) => q.completed === 0
-                            ).length > 0
-                              ? "shadow-lg shadow-red-500 cursor-pointer"
-                              : "shadow-md shadow-gray-300"
-                          }`}
+                        ${
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
                         {item.questionnaire_assigned?.filter(
@@ -793,15 +814,24 @@ const page = () => {
                     {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
+                        onClick={
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
                         className={`min-w-[140px] bg-white shadow-md rounded-xl p-2.5 relative flex flex-col justify-between 
-                          ${
-                            item.questionnaire_assigned?.filter(
-                              (q) => q.completed === 0
-                            ).length > 0
-                              ? "shadow-lg shadow-red-500 cursor-pointer"
-                              : "shadow-md shadow-gray-300"
-                          }`}
+                        ${
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
                         {item.questionnaire_assigned?.filter(
@@ -931,6 +961,7 @@ const page = () => {
       <Patientremainder
         isOpenrem={isOpenrem}
         onCloserem={() => setIsOpenrem(false)}
+        patient={selectedPatient}
       />
       <Accountcreation
         isOpenacc={isOpenacc}

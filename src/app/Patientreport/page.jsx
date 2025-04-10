@@ -324,15 +324,41 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     }
   };
   
-
   const columns = ["SCORE", "Preop", "6W", "3M", "6M", "1Y", "2Y"];
+const periodMap = {
+  "PreOP": "Preop",
+  "Pre Op": "Preop",
+  "pre op": "Preop",
+  "6W": "6W",
+  "3M": "3M",
+  "6M": "6M",
+  "1Y": "1Y",
+  "2Y": "2Y"
+};
 
-  const data = [
-    { label: "OKS (/48)", values: [25, 35, 50, 55, "", ""] },
-    { label: "FJS", values: [22, 28, 30, 52, "", ""] },
-    { label: "KOOS (/100)", values: [60, 45, 38, 65, "", ""] },
-    { label: "KSS (/100)", values: [80, 70, 50, 40, "", ""] },
-  ];
+let data = [];
+
+if (patient?.questionnaire_scores) {
+  const scoreMap = {};
+
+  patient.questionnaire_scores.forEach(scoreEntry => {
+    const scoreName = scoreEntry.name;
+    const period = periodMap[scoreEntry.period] || scoreEntry.period;
+    const score = scoreEntry.score;
+
+    if (!scoreMap[scoreName]) {
+      scoreMap[scoreName] = {};
+    }
+
+    scoreMap[scoreName][period] = score;
+  });
+
+  data = Object.entries(scoreMap).map(([name, valuesObj]) => {
+    const values = columns.slice(1).map(period => valuesObj[period] ?? "");
+    return { label: name, values };
+  });
+}
+
 
   const getColor = (val) => {
     if (val === "") return "#B0C4C7"; // default light grayish-blue
@@ -902,135 +928,118 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
             }`}
           >
             <div
-              className={` bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
-                width < 970 ? "w-full" : "w-[55%]"
-              }`}
-            >
-              <p className="w-full font-bold text-[#005585] tracking-[6px]">
-                PATIENT REPORTED OUTCOMES
-              </p>
+  className={`bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
+    width < 970 ? "w-full" : "w-[55%]"
+  }`}
+>
+  <p className="w-full font-bold text-[#005585] tracking-[6px]">
+    PATIENT REPORTED OUTCOMES
+  </p>
 
-              <div className="w-full overflow-x-auto">
-                <table className="min-w-full table-fixed">
-                  <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
-                    <tr>
-                      {columns.map((col, idx) => (
-                        <th key={idx} className="px-4 py-1.5 text-center">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white text-[14px] font-semibold">
-                    {data.map((row, idx) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-2 text-[#1F2937]">
-                          {row.label}
-                        </td>
-                        {row.values.map((val, vIdx) => (
-                          <td
-                            key={vIdx}
-                            className="px-4 py-3 text-center"
-                            style={{ color: getColor(val) }}
-                          >
-                            {val}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div
-              className={` bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
-                width < 970 ? "w-full gap-4" : "w-[45%]"
-              }`}
+  <div className="w-full overflow-x-auto">
+    <table className="min-w-full table-fixed">
+      <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
+        <tr>
+          {columns.map((col, idx) => (
+            <th key={idx} className="px-4 py-1.5 text-center">
+              {col}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white text-[14px] font-semibold">
+        {data.length > 0 ? (
+          data.map((row, idx) => (
+            <tr key={idx}>
+              <td className="px-4 py-2 text-[#1F2937]">{row.label}</td>
+              {row.values.map((val, vIdx) => (
+                <td
+                  key={vIdx}
+                  className="px-4 py-3 text-center"
+                  style={{ color: getColor(val) }}
+                >
+                  {val}
+                </td>
+              ))}
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td
+              colSpan={columns.length}
+              className="px-4 py-4 text-center text-[#9CA3AF]"
             >
-              <p className="w-full font-bold text-black">SURGERY DETAILS</p>
-              <div
-                className={`w-full flex ${
-                  width < 530 ? "flex-col gap-4" : "flex-row"
-                }`}
-              >
-                <div
-                  className={`flex flex-row ${
-                    width < 530 ? "w-full" : "w-[60%]"
-                  }`}
-                >
-                  <div className="w-1/2 flex flex-col">
-                    <p className="font-semibold text-[#475467] text-sm">
-                      DATE OF SURGERY
-                    </p>
-                    <p className="font-medium italic text-[#475467] text-sm">
-                      dd/mm/yyyy
-                    </p>
-                  </div>
-                  <div className="w-1/2 flex flex-col justify-end items-center">
-                    <p className="font-semibold text-[#475467] text-sm">
-                      SURGEON
-                    </p>
-                    <p className="font-medium italic text-[#475467] text-sm">
-                      Dr. Jacob
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`flex flex-col ${
-                    width < 530 ? "w-full" : "w-[40%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    SURGERY NAME
-                  </p>
-                  <p className="font-medium italic text-[#475467] text-sm">
-                    Total Knee Replacement
-                  </p>
-                </div>
-              </div>
-              <div className="w-full flex flex-col">
-                <p className="font-semibold text-[#475467] text-sm">
-                  PROCEDURE
-                </p>
-                <p className="font-medium text-[#475467] text-sm">
-                  Patient underwent total knee replacement surgery successfully
-                  with well-aligned implants, stable joint, and satisfactory
-                  post-operative recovery. Advised physiotherapy, pain
-                  management, and regular follow-up.
-                </p>
-              </div>
-              <div
-                className={`w-full flex ${
-                  width < 570 ? "flex-col gap-4" : "flex-row"
-                }`}
-              >
-                <div
-                  className={` flex flex-col ${
-                    width < 570 ? "w-full" : "w-[50%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    IMPLANT
-                  </p>
-                  <p className="font-medium text-[#475467] text-sm">
-                    Zimmer Biomet NexGen LPS-Flex
-                  </p>
-                </div>
-                <div
-                  className={` flex flex-col ${
-                    width < 570 ? "w-full" : "w-[50%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    TECHNOLOGY
-                  </p>
-                  <p className="font-medium italic text-[#475467] text-sm">
-                    Cemented Fixation Technology
-                  </p>
-                </div>
-              </div>
-            </div>
+              No questionnaires answered
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div
+  className={`bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
+    width < 970 ? "w-full gap-4" : "w-[45%]"
+  }`}
+>
+  <p className="w-full font-bold text-black">SURGERY DETAILS</p>
+
+  <div className={`w-full flex ${width < 530 ? "flex-col gap-4" : "flex-row"}`}>
+    <div className={`flex flex-row ${width < 530 ? "w-full" : "w-[60%]"}`}>
+      <div className="w-1/2 flex flex-col">
+        <p className="font-semibold text-[#475467] text-sm">DATE OF SURGERY</p>
+        <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.date_of_surgery
+  ? new Date(patient.post_surgery_details.date_of_surgery).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    })
+  : "Not Available"}
+
+        </p>
+      </div>
+      <div className="w-1/2 flex flex-col justify-end items-center">
+        <p className="font-semibold text-[#475467] text-sm">SURGEON</p>
+        <p className="font-medium italic text-[#475467] text-sm">
+          {patient?.post_surgery_details?.surgeon || "Not Available"}
+        </p>
+      </div>
+    </div>
+
+    <div className={`flex flex-col ${width < 530 ? "w-full" : "w-[40%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">SURGERY NAME</p>
+      <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.surgery_name || "Not Available"}
+      </p>
+    </div>
+  </div>
+
+  <div className="w-full flex flex-col">
+    <p className="font-semibold text-[#475467] text-sm">PROCEDURE</p>
+    <p className="font-medium text-[#475467] text-sm">
+    {patient?.post_surgery_details?.procedure?.toLowerCase() || "Not Available"}
+    </p>
+  </div>
+
+  <div className={`w-full flex ${width < 570 ? "flex-col gap-4" : "flex-row"}`}>
+    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">IMPLANT</p>
+      <p className="font-medium text-[#475467] text-sm">
+        {patient?.post_surgery_details?.implant || "Not Available"}
+      </p>
+    </div>
+    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">TECHNOLOGY</p>
+      <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.technology || "Not Available"}
+      </p>
+    </div>
+  </div>
+</div>
+
           </div>
         </div>
       </div>

@@ -31,13 +31,13 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = ({ isOpenrem, onCloserem, children }) => {
+const page = ({ isOpenrem, onCloserem, patient }) => {
   const useWindowSize = () => {
     const [size, setSize] = useState({
       width: 0,
       height: 0,
     });
-  
+
     useEffect(() => {
       const updateSize = () => {
         setSize({
@@ -45,20 +45,30 @@ const page = ({ isOpenrem, onCloserem, children }) => {
           height: window.innerHeight,
         });
       };
-  
+
       updateSize(); // set initial size
       window.addEventListener("resize", updateSize);
       return () => window.removeEventListener("resize", updateSize);
     }, []);
-  
+
     return size;
   };
 
   const { width, height } = useWindowSize();
   // console.log("Screen Width:", width, "Screen Height:", height);
 
-  const completedItems = ["Oxford Knee Score", "Short Form - 12"];
-  const pendingItems = ["KOOS", "Knee Society Score"];
+  const completedItems = [];
+  const pendingItems = [];
+
+  if (patient?.questionnaire_assigned?.length > 0) {
+    patient.questionnaire_assigned.forEach((q) => {
+      if (q.completed === 1) {
+        completedItems.push(q.name);
+      } else {
+        pendingItems.push(q.name);
+      }
+    });
+  }
 
   const [message, setMessage] = useState("");
 
@@ -129,27 +139,37 @@ const page = ({ isOpenrem, onCloserem, children }) => {
                     COMPLETED
                   </p>
                   <div className="flex flex-col gap-1 items-start">
-                    {completedItems.map((item, index) => (
-                      <p
-                        key={index}
-                        className="text-base text-black font-medium"
-                      >
-                        {item}
-                      </p>
-                    ))}
+                    {completedItems.length > 0 ? (
+                      completedItems.map((item, index) => (
+                        <p
+                          key={index}
+                          className="text-base text-black font-medium"
+                        >
+                          {item}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-base text-black font-medium">-</p>
+                    )}
                   </div>
                 </div>
                 <div className="w-1/2 flex flex-col justify-center items-end gap-2">
                   <p className="font-semibold text-4 text-[#FFB978]">PENDING</p>
                   <div className="flex flex-col gap-1 items-end">
-                    {pendingItems.map((item, index) => (
-                      <p
-                        key={index}
-                        className="text-base text-black font-medium text-end"
-                      >
-                        {item}
+                    {pendingItems.length > 0 ? (
+                      pendingItems.map((item, index) => (
+                        <p
+                          key={index}
+                          className="text-base text-black font-medium text-end"
+                        >
+                          {item}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-base text-black font-medium text-end">
+                        -
                       </p>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
