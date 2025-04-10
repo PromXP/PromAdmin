@@ -195,6 +195,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
           doctor_name: firstName.trim() +" "+ lastName.trim(),
           gender: selectedGender.trim(),
           age: age,
+          designation: "leg surgeon here",
           email: email.trim(),
           uhid: uhid.trim(),
           phone_number: phone.trim(),

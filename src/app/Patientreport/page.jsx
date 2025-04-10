@@ -132,14 +132,16 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     setWarning(""); // Clear any existing warning
 
     const payload = {
-      uhid: patient.uhid, // Ensure `patient` is accessible in this scope
+      uhid: patient.uhid,
       questionnaire_assigned: selectedItems.map((item) => ({
         name: item,
         period: selectedOptiondrop,
-        timestamp: selectedDate,
+        assigned_date: new Date().toISOString(), // current date-time in GMT
+        deadline: new Date(selectedDate).toISOString(), // selected date converted to GMT
         completed: 0,
       })),
     };
+    
 
     try {
       const response = await fetch(
@@ -206,7 +208,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       return;
     }
   
-    const doctorName = selectedDoctor.split(" - ")[0]; // Extract email
+    const doctorName = selectedDoctor.split(" - ")[1]; // Extract email
     const patientUhid = patient?.uhid; // Replace this with your selected patient value
   
     if (!patientUhid) {
@@ -218,6 +220,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       uhid: patient.uhid,
       doctor_assigned: doctorName,
     };
+    console.log(doctorName)
   
     try {
       const response = await fetch("https://promapi.onrender.com/update-doctor", {
