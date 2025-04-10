@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -103,6 +103,37 @@ const page = () => {
   const [isOpenacc, setIsOpenacc] = useState(false);
   const [isOpenaccdoc, setIsOpenaccdoc] = useState(false);
   const [doctorList, setDoctorList] = useState([]);
+
+  const [selectedDate, setSelectedDate] = useState("Today");
+  const dateInputRef = useRef(null);
+
+  const openDatePicker = () => {
+    dateInputRef.current?.showPicker();
+  };
+
+  const handleDateChange = (e) => {
+    const dateValue = e.target.value;
+    if (dateValue) {
+      const selected = new Date(dateValue);
+      const today = new Date();
+
+      const isToday =
+        selected.getDate() === today.getDate() &&
+        selected.getMonth() === today.getMonth() &&
+        selected.getFullYear() === today.getFullYear();
+
+      if (isToday) {
+        setSelectedDate("Today");
+      } else {
+        const formattedDate = selected.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        setSelectedDate(formattedDate);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -606,7 +637,29 @@ const page = () => {
                 <p className="text-black text-lg font-semibold">
                   Patients Progress
                 </p>
-                <p className="text-[#60F881] text-lg font-medium">Today</p>
+                <div
+                  className="relative cursor-pointer"
+                  onClick={openDatePicker}
+                >
+                  <input
+                    type="date"
+                    ref={dateInputRef}
+                    onChange={handleDateChange}
+                    className="absolute opacity-0 pointer-events-none"
+                  />
+                  <p
+                    className={`font-medium text-center min-w-[100px] ${
+                      selectedDate === "Today" || selectedDate === ""
+                        ? "text-[#60F881]"
+                        : "text-black"
+                    }
+                    ${
+                      width > 1000 && width / height > 1 ? "text-sm" : "text-lg"
+                    }`}
+                  >
+                    {selectedDate || "Today"}
+                  </p>
+                </div>
               </div>
               {width >= 1272 && (
                 <div className="w-full h-[90%] flex flex-row justify-start gap-2">
