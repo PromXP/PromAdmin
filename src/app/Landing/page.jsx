@@ -51,7 +51,7 @@ const page = () => {
     };
   
     const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [selected, setSelected] = useState(0);
 
@@ -65,7 +65,8 @@ const page = () => {
     switch (selected) {
       case 0:
         return <HomeDashboard />;
-  
+      case 1:
+        return <ComponentTwo />;
       default:
         return null;
     }

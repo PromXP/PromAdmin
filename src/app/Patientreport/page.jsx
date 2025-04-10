@@ -31,31 +31,31 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = ({ isOpen, onClose, children }) => {
+const page = ({ isOpen, onClose, patient, doctor }) => {
   const useWindowSize = () => {
-      const [size, setSize] = useState({
-        width: 0,
-        height: 0,
-      });
-    
-      useEffect(() => {
-        const updateSize = () => {
-          setSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        };
-    
-        updateSize(); // set initial size
-        window.addEventListener("resize", updateSize);
-        return () => window.removeEventListener("resize", updateSize);
-      }, []);
-    
-      return size;
-    };
-  
-    const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+    const [size, setSize] = useState({
+      width: 0,
+      height: 0,
+    });
+
+    useEffect(() => {
+      const updateSize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+
+      updateSize(); // set initial size
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }, []);
+
+    return size;
+  };
+
+  const { width, height } = useWindowSize();
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [opendrop, setOpendrop] = useState(false);
   const [selectedOptiondrop, setSelectedOptiondrop] = useState("Period");
@@ -113,7 +113,7 @@ const page = ({ isOpen, onClose, children }) => {
 
   const [warning, setWarning] = useState("");
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!selectedOptiondrop || selectedOptiondrop === "Period") {
       setWarning("Please select a Time Period");
       return;
@@ -130,21 +130,62 @@ const page = ({ isOpen, onClose, children }) => {
     }
 
     setWarning(""); // Clear any existing warning
-    console.log("Assigning:", {
-      selectedOptiondrop,
-      selectedDate,
-      selectedItems,
-    });
+
+    const payload = {
+      uhid: patient.uhid, // Ensure `patient` is accessible in this scope
+      questionnaire_assigned: selectedItems.map((item) => ({
+        name: item,
+        period: selectedOptiondrop,
+        timestamp: selectedDate,
+        completed: 0,
+      })),
+    };
+
+    try {
+      const response = await fetch(
+        "https://promapi.onrender.com/add-questionnaire",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("API Error:", error);
+        setWarning("Something went wrong. Please try again.");
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Successfully assigned:", result);
+
+      // Optionally reset the fields
+      setSelectedItems([]);
+      setSelectedOptiondrop("Period");
+      setSelectedDate("");
+
+      setWarning("Questionnaires successfully assigned!");
+      setTimeout(() => setWarning(""), 3000);
+    } catch (err) {
+      console.error("Network error:", err);
+      setWarning("Network error. Please try again.");
+    }
   };
 
-  const doctorList = [
-    "Dr. Jacob - Knee Surgeon",
-    "Dr. Malcom - Knee Surgeon",
-    "Dr. Lisa - Knee Surgeon",
-    "Dr. Andrew - Knee Physician",
-    "Dr. Leo - Knee Surgeon",
-    "Dr. Jane - Knee Physician",
-  ];
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log("Retrieved user from localStorage:", parsedUser);
+      setUserData(parsedUser);
+    }
+  }, []);
 
   const [searchTermdoc, setSearchTermdoc] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -158,12 +199,48 @@ const page = ({ isOpen, onClose, children }) => {
     setSelectedDoctor("");
   };
 
-  const handleAssigndoc = () => {
+  const handleAssigndoc = async () => {
     if (!selectedDoctor) {
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2500);
+      return;
+    }
+  
+    const doctorName = selectedDoctor.split(" - ")[0]; // Extract email
+    const patientUhid = patient?.uhid; // Replace this with your selected patient value
+  
+    if (!patientUhid) {
+      console.error("No patient selected for assignment.");
+      return;
+    }
+  
+    const payload = {
+      uhid: patient.uhid,
+      doctor_assigned: doctorName,
+    };
+  
+    try {
+      const response = await fetch("https://promapi.onrender.com/update-doctor", {
+        method: "PUT", // or "PUT" depending on your backend
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log("Doctor assigned successfully:", result);
+      // You can show a success message here or refresh data
+  
+    } catch (error) {
+      console.error("Error assigning doctor:", error);
     }
   };
+  
 
   const [selectedDatesurgery, setSelectedDatesurgery] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -198,29 +275,90 @@ const page = ({ isOpen, onClose, children }) => {
     setSelectedTime("");
   };
 
-  const handleAssignsurgery = () => {
+  const handleAssignsurgery = async () => {
     if (!selectedDatesurgery || !selectedTime) {
       setWarning("Please select both date and time.");
       return;
     }
-
+  
     const selectedDateTime = new Date(`${selectedDatesurgery}T${selectedTime}`);
     const now = new Date();
-
+  
     if (selectedDateTime < now) {
       setWarning("Selected date and time cannot be in the past.");
       return;
     }
+  
+    if (!patient?.uhid) {
+      console.error("No patient selected for surgery scheduling.");
+      return;
+    }
+  
+    const payload = {
+      uhid: patient.uhid,
+      surgery_scheduled: {
+        date: selectedDatesurgery,
+        time: selectedTime,
+      },
+    };
+  
+    try {
+      const response = await fetch("https://promapi.onrender.com/update-surgery-schedule", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log("Surgery scheduled successfully:", result);
+      // Optionally reset form or show success feedback
+  
+    } catch (error) {
+      console.error("Error scheduling surgery:", error);
+    }
   };
-
+  
   const columns = ["SCORE", "Preop", "6W", "3M", "6M", "1Y", "2Y"];
+const periodMap = {
+  "PreOP": "Preop",
+  "Pre Op": "Preop",
+  "pre op": "Preop",
+  "6W": "6W",
+  "3M": "3M",
+  "6M": "6M",
+  "1Y": "1Y",
+  "2Y": "2Y"
+};
 
-  const data = [
-    { label: "OKS (/48)", values: [25, 35, 50, 55, "", ""] },
-    { label: "FJS", values: [22, 28, 30, 52, "", ""] },
-    { label: "KOOS (/100)", values: [60, 45, 38, 65, "", ""] },
-    { label: "KSS (/100)", values: [80, 70, 50, 40, "", ""] },
-  ];
+let data = [];
+
+if (patient?.questionnaire_scores) {
+  const scoreMap = {};
+
+  patient.questionnaire_scores.forEach(scoreEntry => {
+    const scoreName = scoreEntry.name;
+    const period = periodMap[scoreEntry.period] || scoreEntry.period;
+    const score = scoreEntry.score;
+
+    if (!scoreMap[scoreName]) {
+      scoreMap[scoreName] = {};
+    }
+
+    scoreMap[scoreName][period] = score;
+  });
+
+  data = Object.entries(scoreMap).map(([name, valuesObj]) => {
+    const values = columns.slice(1).map(period => valuesObj[period] ?? "");
+    return { label: name, values };
+  });
+}
+
 
   const getColor = (val) => {
     if (val === "") return "#B0C4C7"; // default light grayish-blue
@@ -324,7 +462,7 @@ const page = ({ isOpen, onClose, children }) => {
                               width < 530 ? "text-start" : ""
                             }`}
                           >
-                            ALEX HALES
+                            {patient.first_name + " " + patient.last_name}
                           </p>
                         </div>
                         <div
@@ -340,14 +478,14 @@ const page = ({ isOpen, onClose, children }) => {
                             }
                           w-1/2`}
                           >
-                            25, Male
+                            {patient.age}, {patient.gender}
                           </p>
                           <div
                             className={`text-sm font-normal font-poppins text-[#475467] w-1/2 ${
                               width < 530 ? "text-center" : ""
                             }`}
                           >
-                            UHID 12345678
+                            UHID {patient.uhid}
                           </div>
                         </div>
                       </div>
@@ -373,7 +511,7 @@ const page = ({ isOpen, onClose, children }) => {
                             BMI
                           </p>
                           <p className="text-[#04CE00] font-bold text-6">
-                            22.8
+                            {patient.bmi}
                           </p>
                         </div>
                         <div
@@ -387,7 +525,9 @@ const page = ({ isOpen, onClose, children }) => {
                             DOCTOR ASSIGNED
                           </p>
                           <p className="text-black font-bold text-6">
-                            Dr. Jacob
+                            {patient.doctor_assigned
+                              ? patient.doctor_assigned
+                              : "-"}
                           </p>
                         </div>
                         <div
@@ -401,7 +541,7 @@ const page = ({ isOpen, onClose, children }) => {
                             STATUS
                           </p>
                           <p className="text-[#FFB978] font-bold text-6">
-                            PRE OPERATIVE
+                            {patient.current_status}
                           </p>
                         </div>
                       </div>
@@ -427,8 +567,18 @@ const page = ({ isOpen, onClose, children }) => {
               <h2 className="font-bold text-black text-7">
                 ASSIGN QUESTIONNAIRES
               </h2>
-              <div className={`w-full flex  ${width<470?"flex-col justify-center items-center gap-2":"flex-row"}`}>
-                <div className={`w-[75%] flex flex-row  ${width<470?"justify-between":"gap-4"}`}>
+              <div
+                className={`w-full flex  ${
+                  width < 470
+                    ? "flex-col justify-center items-center gap-2"
+                    : "flex-row"
+                }`}
+              >
+                <div
+                  className={`w-[75%] flex flex-row  ${
+                    width < 470 ? "justify-between" : "gap-4"
+                  }`}
+                >
                   <div className="w-[40%] flex flex-row justify-between items-center">
                     <input
                       type="text"
@@ -475,8 +625,14 @@ const page = ({ isOpen, onClose, children }) => {
                     )}
                   </div>
                 </div>
-                <div className={`flex flex-row  items-center  cursor-pointer ${width<470?"w-full gap-4 justify-center":"w-[25%] justify-between"}`}
-                onClick={openDatePicker}>
+                <div
+                  className={`flex flex-row  items-center  cursor-pointer ${
+                    width < 470
+                      ? "w-full gap-4 justify-center"
+                      : "w-[25%] justify-between"
+                  }`}
+                  onClick={openDatePicker}
+                >
                   <p className="font-medium italic text-[#475467] text-sm">
                     {selectedDate || "DEADLINE"}
                   </p>
@@ -487,11 +643,7 @@ const page = ({ isOpen, onClose, children }) => {
                       onChange={handleDateChange}
                       className="absolute opacity-0 pointer-events-none"
                     />
-                    <Image
-                      src={Calendar}
-                      className="w-3 h-3 "
-                      alt="Calendar"
-                    />
+                    <Image src={Calendar} className="w-3 h-3 " alt="Calendar" />
                   </div>
                 </div>
               </div>
@@ -589,13 +741,14 @@ const page = ({ isOpen, onClose, children }) => {
                 }`}
               >
                 <div className="flex flex-wrap gap-2">
-                  {doctorList
+                  {doctor
                     .filter((item) =>
                       item.toLowerCase().includes(searchTermdoc.toLowerCase())
                     )
                     .map((item, index) => {
                       const [name, designation] = item.split(" - ");
                       const isSelected = selectedDoctor === item;
+
                       return (
                         <label
                           key={index}
@@ -775,135 +928,118 @@ const page = ({ isOpen, onClose, children }) => {
             }`}
           >
             <div
-              className={` bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
-                width < 970 ? "w-full" : "w-[55%]"
-              }`}
-            >
-              <p className="w-full font-bold text-[#005585] tracking-[6px]">
-                PATIENT REPORTED OUTCOMES
-              </p>
+  className={`bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
+    width < 970 ? "w-full" : "w-[55%]"
+  }`}
+>
+  <p className="w-full font-bold text-[#005585] tracking-[6px]">
+    PATIENT REPORTED OUTCOMES
+  </p>
 
-              <div className="w-full overflow-x-auto">
-                <table className="min-w-full table-fixed">
-                  <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
-                    <tr>
-                      {columns.map((col, idx) => (
-                        <th key={idx} className="px-4 py-1.5 text-center">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white text-[14px] font-semibold">
-                    {data.map((row, idx) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-2 text-[#1F2937]">
-                          {row.label}
-                        </td>
-                        {row.values.map((val, vIdx) => (
-                          <td
-                            key={vIdx}
-                            className="px-4 py-3 text-center"
-                            style={{ color: getColor(val) }}
-                          >
-                            {val}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div
-              className={` bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
-                width < 970 ? "w-full gap-4" : "w-[45%]"
-              }`}
+  <div className="w-full overflow-x-auto">
+    <table className="min-w-full table-fixed">
+      <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
+        <tr>
+          {columns.map((col, idx) => (
+            <th key={idx} className="px-4 py-1.5 text-center">
+              {col}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white text-[14px] font-semibold">
+        {data.length > 0 ? (
+          data.map((row, idx) => (
+            <tr key={idx}>
+              <td className="px-4 py-2 text-[#1F2937]">{row.label}</td>
+              {row.values.map((val, vIdx) => (
+                <td
+                  key={vIdx}
+                  className="px-4 py-3 text-center"
+                  style={{ color: getColor(val) }}
+                >
+                  {val}
+                </td>
+              ))}
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td
+              colSpan={columns.length}
+              className="px-4 py-4 text-center text-[#9CA3AF]"
             >
-              <p className="w-full font-bold text-black">SURGERY DETAILS</p>
-              <div
-                className={`w-full flex ${
-                  width < 530 ? "flex-col gap-4" : "flex-row"
-                }`}
-              >
-                <div
-                  className={`flex flex-row ${
-                    width < 530 ? "w-full" : "w-[60%]"
-                  }`}
-                >
-                  <div className="w-1/2 flex flex-col">
-                    <p className="font-semibold text-[#475467] text-sm">
-                      DATE OF SURGERY
-                    </p>
-                    <p className="font-medium italic text-[#475467] text-sm">
-                      dd/mm/yyyy
-                    </p>
-                  </div>
-                  <div className="w-1/2 flex flex-col justify-end items-center">
-                    <p className="font-semibold text-[#475467] text-sm">
-                      SURGEON
-                    </p>
-                    <p className="font-medium italic text-[#475467] text-sm">
-                      Dr. Jacob
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`flex flex-col ${
-                    width < 530 ? "w-full" : "w-[40%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    SURGERY NAME
-                  </p>
-                  <p className="font-medium italic text-[#475467] text-sm">
-                    Total Knee Replacement
-                  </p>
-                </div>
-              </div>
-              <div className="w-full flex flex-col">
-                <p className="font-semibold text-[#475467] text-sm">
-                  PROCEDURE
-                </p>
-                <p className="font-medium text-[#475467] text-sm">
-                  Patient underwent total knee replacement surgery successfully
-                  with well-aligned implants, stable joint, and satisfactory
-                  post-operative recovery. Advised physiotherapy, pain
-                  management, and regular follow-up.
-                </p>
-              </div>
-              <div
-                className={`w-full flex ${
-                  width < 570 ? "flex-col gap-4" : "flex-row"
-                }`}
-              >
-                <div
-                  className={` flex flex-col ${
-                    width < 570 ? "w-full" : "w-[50%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    IMPLANT
-                  </p>
-                  <p className="font-medium text-[#475467] text-sm">
-                    Zimmer Biomet NexGen LPS-Flex
-                  </p>
-                </div>
-                <div
-                  className={` flex flex-col ${
-                    width < 570 ? "w-full" : "w-[50%]"
-                  }`}
-                >
-                  <p className="font-semibold text-[#475467] text-sm">
-                    TECHNOLOGY
-                  </p>
-                  <p className="font-medium italic text-[#475467] text-sm">
-                    Cemented Fixation Technology
-                  </p>
-                </div>
-              </div>
-            </div>
+              No questionnaires answered
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div
+  className={`bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
+    width < 970 ? "w-full gap-4" : "w-[45%]"
+  }`}
+>
+  <p className="w-full font-bold text-black">SURGERY DETAILS</p>
+
+  <div className={`w-full flex ${width < 530 ? "flex-col gap-4" : "flex-row"}`}>
+    <div className={`flex flex-row ${width < 530 ? "w-full" : "w-[60%]"}`}>
+      <div className="w-1/2 flex flex-col">
+        <p className="font-semibold text-[#475467] text-sm">DATE OF SURGERY</p>
+        <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.date_of_surgery
+  ? new Date(patient.post_surgery_details.date_of_surgery).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    })
+  : "Not Available"}
+
+        </p>
+      </div>
+      <div className="w-1/2 flex flex-col justify-end items-center">
+        <p className="font-semibold text-[#475467] text-sm">SURGEON</p>
+        <p className="font-medium italic text-[#475467] text-sm">
+          {patient?.post_surgery_details?.surgeon || "Not Available"}
+        </p>
+      </div>
+    </div>
+
+    <div className={`flex flex-col ${width < 530 ? "w-full" : "w-[40%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">SURGERY NAME</p>
+      <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.surgery_name || "Not Available"}
+      </p>
+    </div>
+  </div>
+
+  <div className="w-full flex flex-col">
+    <p className="font-semibold text-[#475467] text-sm">PROCEDURE</p>
+    <p className="font-medium text-[#475467] text-sm">
+    {patient?.post_surgery_details?.procedure?.toLowerCase() || "Not Available"}
+    </p>
+  </div>
+
+  <div className={`w-full flex ${width < 570 ? "flex-col gap-4" : "flex-row"}`}>
+    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">IMPLANT</p>
+      <p className="font-medium text-[#475467] text-sm">
+        {patient?.post_surgery_details?.implant || "Not Available"}
+      </p>
+    </div>
+    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
+      <p className="font-semibold text-[#475467] text-sm">TECHNOLOGY</p>
+      <p className="font-medium italic text-[#475467] text-sm">
+        {patient?.post_surgery_details?.technology || "Not Available"}
+      </p>
+    </div>
+  </div>
+</div>
+
           </div>
         </div>
       </div>

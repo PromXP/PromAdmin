@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 import Image from "next/image";
 
@@ -33,7 +34,7 @@ const useWindowSize = () => {
 
   useEffect(() => {
     // Make sure this runs only on client
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const handleResize = () => {
         setSize({ width: window.innerWidth, height: window.innerHeight });
       };
@@ -41,8 +42,8 @@ const useWindowSize = () => {
       // Set initial size
       handleResize();
 
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
 
@@ -50,144 +51,28 @@ const useWindowSize = () => {
 };
 
 const page = () => {
-
   const { width, height } = useWindowSize();
-  console.log("Screen Width:", width, "Screen Height:", height);
+  // console.log("Screen Width:", width, "Screen Height:", height);
 
   const [selected, setSelected] = useState(0);
-
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [userData, setUserData] = useState(null);
   const handleSelect = (index) => {
     setSelected(index);
   };
 
   const [patients, setPatients] = useState([]);
-  const samplePatients = [
-    {
-      _id: "1",
-      user_id: "JohnDoe",
-      unique_id: "PAT001",
-      PersonalDetails: { Age: 29, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "2",
-      user_id: "JaneSmith",
-      unique_id: "PAT002",
-      PersonalDetails: { Age: 34, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "3",
-      user_id: "MikeJohnson",
-      unique_id: "PAT003",
-      PersonalDetails: { Age: 42, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "4",
-      user_id: "EmilyDavis",
-      unique_id: "PAT004",
-      PersonalDetails: { Age: 26, Gender: "Female" },
-      surgeryStatus: "6M",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "5",
-      user_id: "DavidMiller",
-      unique_id: "PAT005",
-      PersonalDetails: { Age: 37, Gender: "Male" },
-      surgeryStatus: "1Y",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "6",
-      user_id: "SarahWilson",
-      unique_id: "PAT006",
-      PersonalDetails: { Age: 31, Gender: "Female" },
-      surgeryStatus: "2Y",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "7",
-      user_id: "RobertBrown",
-      unique_id: "PAT007",
-      PersonalDetails: { Age: 45, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "8",
-      user_id: "OliviaTaylor",
-      unique_id: "PAT008",
-      PersonalDetails: { Age: 28, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "9",
-      user_id: "DanielAnderson",
-      unique_id: "PAT009",
-      PersonalDetails: { Age: 39, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "10",
-      user_id: "SophiaMartinez",
-      unique_id: "PAT010",
-      PersonalDetails: { Age: 33, Gender: "Female" },
-      surgeryStatus: "6M",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "11",
-      user_id: "MatthewThomas",
-      unique_id: "PAT011",
-      PersonalDetails: { Age: 27, Gender: "Male" },
-      surgeryStatus: "1Y",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "12",
-      user_id: "EmmaWhite",
-      unique_id: "PAT012",
-      PersonalDetails: { Age: 30, Gender: "Female" },
-      surgeryStatus: "2Y",
-      questionnaireStatus: "COMPLETED",
-    },
-    {
-      _id: "13",
-      user_id: "JamesHarris",
-      unique_id: "PAT013",
-      PersonalDetails: { Age: 41, Gender: "Male" },
-      surgeryStatus: "PRE OP",
-      questionnaireStatus: "PENDING",
-    },
-    {
-      _id: "14",
-      user_id: "IsabellaClark",
-      unique_id: "PAT014",
-      PersonalDetails: { Age: 36, Gender: "Female" },
-      surgeryStatus: "6W",
-      questionnaireStatus: "NOT ASSIGNED",
-    },
-    {
-      _id: "15",
-      user_id: "WilliamLewis",
-      unique_id: "PAT015",
-      PersonalDetails: { Age: 38, Gender: "Male" },
-      surgeryStatus: "3M",
-      questionnaireStatus: "COMPLETED",
-    },
-  ];
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log("Retrieved user from localStorage:", parsedUser);
+      setUserData(parsedUser);
+    }
+  }, []);
 
   // To set this sample data in your useState
-  useEffect(() => {
-    setPatients(samplePatients);
-  }, []);
 
   const [patfilter, setpatFilter] = useState("All PATIENTS");
 
@@ -198,16 +83,16 @@ const page = () => {
   // Load selected option from localStorage or default to "ALL"
   const [postopfilter, setpostopFitler] = useState("ALL");
 
-  const patientData = [
-    { name: "Bennett", surgeryStatus: "6W", completed: 5, pending: 2 },
-    { name: "Sophia", surgeryStatus: "3M", completed: 8, pending: 0 },
-    { name: "Liam", surgeryStatus: "6M", completed: 12, pending: 3 },
-    { name: "Olivia", surgeryStatus: "1Y", completed: 20, pending: 4 },
-    { name: "Noah", surgeryStatus: "2Y", completed: 15, pending: 0 },
-    { name: "Emma", surgeryStatus: "6W", completed: 9, pending: 0 },
-    { name: "Mason", surgeryStatus: "3M", completed: 7, pending: 0 },
-    { name: "Ava", surgeryStatus: "1Y", completed: 11, pending: 3 },
-  ];
+  // const patientData = [
+  //   { name: "Bennett", surgeryStatus: "6W", completed: 5, pending: 2 },
+  //   { name: "Sophia", surgeryStatus: "3M", completed: 8, pending: 0 },
+  //   { name: "Liam", surgeryStatus: "6M", completed: 12, pending: 3 },
+  //   { name: "Olivia", surgeryStatus: "1Y", completed: 20, pending: 4 },
+  //   { name: "Noah", surgeryStatus: "2Y", completed: 15, pending: 0 },
+  //   { name: "Emma", surgeryStatus: "6W", completed: 9, pending: 0 },
+  //   { name: "Mason", surgeryStatus: "3M", completed: 7, pending: 0 },
+  //   { name: "Ava", surgeryStatus: "1Y", completed: 11, pending: 3 },
+  // ];
 
   const [patprogressfilter, setpatprogressFilter] = useState("ALL");
 
@@ -217,16 +102,97 @@ const page = () => {
   const [isOpenrem, setIsOpenrem] = useState(false);
   const [isOpenacc, setIsOpenacc] = useState(false);
   const [isOpenaccdoc, setIsOpenaccdoc] = useState(false);
+  const [doctorList, setDoctorList] = useState([]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (!userData?.user?.email) return;
+      try {
+        const res = await axios.get(
+          `https://promapi.onrender.com/patients/by-admin/${userData?.user?.email}`
+        );
+        const data = res.data;
+
+        // Optional: Add any transformation or filtering logic here if needed
+        setPatients(data);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+
+    fetchPatients();
+  }, [userData?.user?.email]);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        console.log("HIIII", userData?.user?.email);
+        const res = await fetch(
+          `https://promapi.onrender.com/doctors/by-admin/${userData?.user?.email}`
+        );
+        const data = await res.json();
+        console.log("Fetched doctor list:", data); // Should appear
+        const formatted = data.map(
+          (doc) => `${doc.doctor_name} - ${doc.email}`
+        );
+        setDoctorList(formatted);
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      }
+    };
+
+    if (userData?.user?.email) {
+      fetchDoctors();
+    }
+  }, [userData?.user?.email]);
+
+  const filteredPatients = patients.filter((patient) => {
+    const status = patient.current_status.toLowerCase();
+    const selectedFilter = patfilter.toLowerCase();
+    const subFilter = postopfilter.toLowerCase();
+
+    if (selectedFilter === "all patients") {
+      return true;
+    }
+
+    if (selectedFilter === "pre operative") {
+      return status.includes("pre");
+    }
+
+    // Anything not "pre" is treated as post-operative
+    if (selectedFilter === "post operative") {
+      if (subFilter === "all") {
+        return !status.includes("pre");
+      }
+      return !status.includes("pre") && status.includes(subFilter);
+    }
+
+    return false;
+  });
+
+  const displayedPatients = patients.filter((patient) => {
+    const status = patient.current_status?.toLowerCase() || "";
+    const selectedFilter = patprogressfilter.toLowerCase();
+
+    if (selectedFilter === "all") return true;
+    if (selectedFilter === "pre op") return status.includes("pre");
+    if (selectedFilter === "post op") return !status.includes("pre");
+
+    return false;
+  });
+
   return (
     <>
       <div className="flex flex-col md:flex-row w-[95%] mx-auto mt-4 items-center justify-between">
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row items-center md:items-end gap-1 md:gap-4">
           <h4 className="font-medium text-black text-xl md:text-[26px]">
-            Good Morning
+            Welcome
           </h4>
           <h2 className="font-bold text-[#005585] text-2xl md:text-4xl">
-            Mr. Mathew!
+            {userData?.user?.admin_name
+              ? `${userData.user.admin_name}`
+              : "Loading..."}
           </h2>
         </div>
 
@@ -385,9 +351,9 @@ const page = () => {
                 : "h-[90%]"
             }`}
           >
-            {patients.map((patient) => (
+            {filteredPatients.map((patient) => (
               <div
-                key={patient._id}
+                key={patient.uhid}
                 style={{ backgroundColor: "rgba(0, 85, 133, 0.1)" }}
                 className={`w-full rounded-lg flex  my-1 py-2 px-3 ${
                   width < 530
@@ -421,7 +387,7 @@ const page = () => {
                           : "w-10 h-10"
                       }`}
                       src={Patientimg}
-                      alt={patient.user_id}
+                      alt={patient.uhid}
                     />
 
                     <div
@@ -440,7 +406,7 @@ const page = () => {
                               width < 530 ? "w-full text-center" : ""
                             }`}
                           >
-                            {patient.user_id}
+                            {patient.first_name + " " + patient.last_name}
                           </p>
                         </div>
                         <p
@@ -448,8 +414,7 @@ const page = () => {
                             width < 530 ? "text-center" : "text-start"
                           }`}
                         >
-                          {patient.PersonalDetails.Age},{" "}
-                          {patient.PersonalDetails.Gender}
+                          {patient.age}, {patient.gender}
                         </p>
                       </div>
 
@@ -462,7 +427,7 @@ const page = () => {
                             : "w-[30%] text-center"
                         }`}
                       >
-                        UHID {patient.unique_id}
+                        UHID {patient.uhid}
                       </div>
                     </div>
                   </div>
@@ -496,7 +461,7 @@ const page = () => {
                           : "w-[35%] text-end"
                       }`}
                     >
-                      {patient.surgeryStatus}
+                      {patient.current_status}
                     </div>
                     <div
                       className={`text-sm font-medium text-black ${
@@ -507,7 +472,13 @@ const page = () => {
                           : "w-[65%] text-end"
                       }`}
                     >
-                      {patient.questionnaireStatus}
+                      {patient.questionnaire_assigned?.length === 0
+                        ? "NOT ASSIGNED"
+                        : patient.questionnaire_assigned.every(
+                            (q) => q.completed === 0
+                          )
+                        ? "PENDING"
+                        : "COMPLETED"}
                     </div>
                   </div>
 
@@ -524,7 +495,10 @@ const page = () => {
                           ? "w-full justify-center"
                           : ""
                       }`}
-                      onClick={() => setIsOpen(true)}
+                      onClick={() => {
+                        setSelectedPatient(patient);
+                        setIsOpen(true);
+                      }}
                     >
                       <div className="text-sm font-medium border-b-2 text-[#476367] border-blue-gray-500 cursor-pointer">
                         Report
@@ -581,7 +555,7 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  53
+                  {userData?.user?.patients_created?.length ?? "Loading..."}
                 </p>
               </div>
               <p
@@ -610,7 +584,7 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  53
+                  {userData?.user?.doctors_created?.length ?? "Loading..."}
                 </p>
               </div>
               <p
@@ -637,19 +611,32 @@ const page = () => {
               {width >= 1272 && (
                 <div className="w-full h-[90%] flex flex-row justify-start gap-2">
                   <div className="justify-start grid grid-cols-2  w-5/6 h-full overflow-y-scroll flex-grow ">
-                    {patientData.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
+                        onClick={
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
                         className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-2 relative flex flex-col justify-between 
-                              ${
-                                item.pending > 0
-                                  ? "shadow-lg shadow-red-500 cursor-pointer"
-                                  : "shadow-md shadow-gray-300"
-                              }`}
+                       ${
+                         item.questionnaire_assigned?.filter(
+                           (q) => q.completed === 0
+                         ).length > 0
+                           ? "shadow-lg shadow-red-500 cursor-pointer"
+                           : "shadow-md shadow-gray-300"
+                       }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -658,12 +645,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -672,7 +659,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -682,7 +671,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -729,19 +720,32 @@ const page = () => {
                   </div>
 
                   <div className="justify-center grid grid-cols-2  w-full h-full overflow-y-scroll flex-grow ">
-                    {patientData.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
+                        onClick={
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
                         className={`w-[100px] h-37 bg-white shadow-md rounded-xl p-2.5 m-1 relative flex flex-col justify-between 
-                              ${
-                                item.pending > 0
-                                  ? "shadow-lg shadow-red-500 cursor-pointer"
-                                  : "shadow-md shadow-gray-300"
-                              }`}
+                        ${
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -750,12 +754,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -764,7 +768,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -774,7 +780,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -803,19 +811,32 @@ const page = () => {
                   </div>
 
                   <div className="flex flex-row overflow-x-scroll w-full h-full p-2 space-x-5">
-                    {patientData.map((item, index) => (
+                    {displayedPatients.map((item, index) => (
                       <div
                         key={index}
-                        onClick={() => setIsOpenrem(true)}
+                        onClick={
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? () => {
+                                setSelectedPatient(item);
+                                setIsOpenrem(true);
+                              }
+                            : undefined
+                        }
                         className={`min-w-[140px] bg-white shadow-md rounded-xl p-2.5 relative flex flex-col justify-between 
-        ${
-          item.pending > 0
-            ? "shadow-lg shadow-red-500 cursor-pointer"
-            : "shadow-md shadow-gray-300"
-        }`}
+                        ${
+                          item.questionnaire_assigned?.filter(
+                            (q) => q.completed === 0
+                          ).length > 0
+                            ? "shadow-lg shadow-red-500 cursor-pointer"
+                            : "shadow-md shadow-gray-300"
+                        }`}
                       >
                         {/* Top Right Arrow Icon */}
-                        {item.pending > 0 && (
+                        {item.questionnaire_assigned?.filter(
+                          (q) => q.completed === 0
+                        ).length > 0 && (
                           <ArrowUpRightIcon
                             color="blue"
                             className="w-4 h-4 top-2 right-2 absolute"
@@ -824,12 +845,12 @@ const page = () => {
 
                         {/* Patient Name */}
                         <p className="text-[#475467] text-base font-medium text-center mt-3">
-                          {item.name}
+                          {item.first_name + " " + item.last_name}
                         </p>
 
                         {/* Status */}
                         <p className="text-gray-400 text-sm font-medium text-center">
-                          {item.surgeryStatus}
+                          {item.current_status}
                         </p>
 
                         {/* Completed */}
@@ -838,7 +859,9 @@ const page = () => {
                             COMPLETED
                           </p>
                           <p className="text-green-500 text-sm font-bold">
-                            {item.completed}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 1
+                            ).length || 0}
                           </p>
                         </div>
 
@@ -848,7 +871,9 @@ const page = () => {
                             PENDING
                           </p>
                           <p className="text-orange-400 text-sm font-bold">
-                            {item.pending}
+                            {item.questionnaire_assigned?.filter(
+                              (q) => q.completed === 0
+                            ).length || 0}
                           </p>
                         </div>
                       </div>
@@ -926,10 +951,26 @@ const page = () => {
         </div>
       </div>
 
-      <Patientreport isOpen={isOpen} onClose={() => setIsOpen(false)} />
-      <Patientremainder isOpenrem={isOpenrem} onCloserem={() => setIsOpenrem(false)}/>
-      <Accountcreation isOpenacc={isOpenacc} onCloseacc={() => setIsOpenacc(false)}/>
-      <Accountcreationdoctor isOpenaccdoc={isOpenaccdoc} onCloseaccdoc={() => setIsOpenaccdoc(false)}/>
+      <Patientreport
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        patient={selectedPatient}
+        doctor={doctorList}
+      />
+
+      <Patientremainder
+        isOpenrem={isOpenrem}
+        onCloserem={() => setIsOpenrem(false)}
+        patient={selectedPatient}
+      />
+      <Accountcreation
+        isOpenacc={isOpenacc}
+        onCloseacc={() => setIsOpenacc(false)}
+      />
+      <Accountcreationdoctor
+        isOpenaccdoc={isOpenaccdoc}
+        onCloseaccdoc={() => setIsOpenaccdoc(false)}
+      />
     </>
   );
 };
