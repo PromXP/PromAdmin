@@ -89,8 +89,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const allItems = [
     "Oxford Knee Score (OKS)",
+    "Short Form - 12 (SF-12)",
     "Knee Society Score (KSS)",
-    "Knee Injury and Osethoarthritis Outcome Score (KOOS)",
+    "Knee Injury and Osethoarthritis Outcome Score, Joint Replacement (KOOS, JR)",
     "Forgotten Join Score (FJS)",
   ];
 
