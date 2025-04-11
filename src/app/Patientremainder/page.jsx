@@ -74,12 +74,35 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
 
   const [showAlert, setShowAlert] = useState(false);
 
-  const handleSendremainder = () => {
-    if (message.trim() === "") {
-      setShowAlert(true);
-      setTimeout(() => setShowAlert(false), 2500);
-    }
-  };
+  const handleSendremainder = async () => {
+  if (message.trim() === "") {
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 2500);
+    return;
+  }
+
+  try {
+    const res = await fetch('../api/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: patient.email,
+        subject: 'Questionnaire Pending Reminder',
+        message,
+      }),
+    });
+    
+    const data = await res.json()
+    console.log(data)
+    alert('Email sent (check console for details)')
+  } catch (error) {
+    console.error('Error sending email:', error);
+    alert('Failed to send email.');
+  }
+};
+
 
   if (!isOpenrem) return null;
   return (
