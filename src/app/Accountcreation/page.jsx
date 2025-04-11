@@ -37,28 +37,28 @@ const poppins = Poppins({
 
 const page = ({ isOpenacc, onCloseacc, children }) => {
   const useWindowSize = () => {
-      const [size, setSize] = useState({
-        width: 0,
-        height: 0,
-      });
-    
-      useEffect(() => {
-        const updateSize = () => {
-          setSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        };
-    
-        updateSize(); // set initial size
-        window.addEventListener("resize", updateSize);
-        return () => window.removeEventListener("resize", updateSize);
-      }, []);
-    
-      return size;
-    };
-  
-    const { width, height } = useWindowSize();
+    const [size, setSize] = useState({
+      width: 0,
+      height: 0,
+    });
+
+    useEffect(() => {
+      const updateSize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+
+      updateSize(); // set initial size
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }, []);
+
+    return size;
+  };
+
+  const { width, height } = useWindowSize();
 
   // console.log("Screen Width:", width, "Screen Height:", height);
   const [message, setMessage] = useState("");
@@ -127,7 +127,6 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
 
   // Auto calculate BMI whenever height or weight changes
 
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [uhid, setUhid] = useState("");
@@ -143,9 +142,6 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
   const [age, setAge] = useState(0);
   const [selectedOptiondrop, setSelectedOptiondrop] = useState("Select");
   const [selectedDate, setSelectedDate] = useState("");
-
-  
-  
 
   const clearAllFields = () => {
     setFirstName("");
@@ -163,37 +159,43 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
   };
 
   const [alertMessage, setAlertMessage] = useState("");
-const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(null);
   useEffect(() => {
-      const storedUser = localStorage.getItem("userData");
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        console.log("Retrieved user from localStorage:", parsedUser);
-        setUserData(parsedUser);
-      }
-    }, []);
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log("Retrieved user from localStorage:", parsedUser);
+      setUserData(parsedUser);
+    }
+  }, []);
 
   const handleSendremainder = async () => {
     if (!firstName.trim()) return showWarning("First Name is required.");
     if (!lastName.trim()) return showWarning("Last Name is required.");
     if (!uhid.trim()) return showWarning("UHID is required.");
     if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
-    if (!selectedGender.trim()) return showWarning("Gender is required.");
-    if (selectedOptiondrop === "Select") return showWarning("Blood group must be selected.");
-    if (!phone.trim()) return showWarning("Phone number is required.");
-    if (!email.trim()) return showWarning("Email is required.");
-    if (!heightbmi.trim()) return showWarning("Height is required.");
-    if (!weight.trim()) return showWarning("Weight is required.");
-  
+    
     // Calculate age (simple version, assuming DOB format: "YYYY-MM-DD")
     const birthYear = new Date(selectedDate).getFullYear();
     const currentYear = new Date().getFullYear();
     const age = currentYear - birthYear;
-  
+
+    if(age<=0) return showWarning("Select Date of Birth Correctly");
+    if (!selectedGender.trim()) return showWarning("Gender is required.");
+    if (selectedOptiondrop === "Select")
+      return showWarning("Blood group must be selected.");
+    if (!phone.trim()) return showWarning("Phone number is required.");
+    if (!email.trim()) return showWarning("Email is required.");
+    if (!heightbmi.trim()) return showWarning("Height is required.");
+    if (!weight.trim()) return showWarning("Weight is required.");
+    
+
+    
+
     // Calculate BMI
     const heightInMeters = parseFloat(heightbmi) / 100;
     const bmi = parseFloat(weight) / (heightInMeters * heightInMeters);
-  
+
     const payload = {
       uhid: uhid,
       first_name: firstName,
@@ -214,33 +216,35 @@ const [userData, setUserData] = useState(null);
       questionnaire_scores: [],
       surgery_scheduled: {
         date: "2025-04-15", // replace with actual selected date
-        time: "10:30 AM",    // replace with actual selected time
+        time: "10:30 AM", // replace with actual selected time
       },
       post_surgery_details: {
         date_of_surgery: "2025-04-09",
-        surgeon: "Dr. XYZ",            // replace accordingly
-        surgery_name: "Dr. XYZ",       // if different
+        surgeon: "Dr. XYZ", // replace accordingly
+        surgery_name: "Dr. XYZ", // if different
         procedure: "Knee Replacement", // replace
-        implant: "Titanium X",         // replace
-        technology: "Robotic Assist",  // replace
+        implant: "Titanium X", // replace
+        technology: "Robotic Assist", // replace
       },
       current_status: "pre_op",
     };
-  
+
     try {
-      const response = await fetch("https://promapi.onrender.com/registerpatient", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        
-      });
+      const response = await fetch(
+        "https://promapi.onrender.com/registerpatient",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       console.log("Submission successful:", payload);
       if (!response.ok) {
         throw new Error("Failed to send data.");
       }
-  
+
       const result = await response.json();
       console.log("Submission successful:", result);
       onCloseacc();
@@ -250,7 +254,7 @@ const [userData, setUserData] = useState(null);
       showWarning("Something went wrong. Please try again.");
     }
   };
-  
+
   useEffect(() => {
     const h = parseFloat(heightbmi);
     const w = parseFloat(weight);
@@ -268,9 +272,6 @@ const [userData, setUserData] = useState(null);
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 4000);
   };
-
-
-  
 
   if (!isOpenacc) return null;
   return (
@@ -323,14 +324,20 @@ const [userData, setUserData] = useState(null);
                   <p className="font-bold text-5 text-black">
                     ACCOUNT CREATION
                   </p>
-                  <p className="font-bold text-base text-black">
-                    PATIENT
-                  </p>
+                  <p className="font-bold text-base text-black">PATIENT</p>
                 </div>
               </div>
 
-              <div className={`w-full flex  gap-4 ${width<550?"flex-col":"flex-row"}`}>
-                <div className={`flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-1/2"}`}>
+              <div
+                className={`w-full flex  gap-4 ${
+                  width < 550 ? "flex-col" : "flex-row"
+                }`}
+              >
+                <div
+                  className={`flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <input
                     type="text"
                     placeholder="FIRST NAME"
@@ -342,7 +349,11 @@ const [userData, setUserData] = useState(null);
                     }}
                   />
                 </div>
-                <div className={`flex flex-col justify-center items-end gap-2 ${width<550?"w-full":"w-1/2"}`}>
+                <div
+                  className={`flex flex-col justify-center items-end gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <input
                     type="text"
                     placeholder="LAST NAME"
@@ -356,8 +367,16 @@ const [userData, setUserData] = useState(null);
                 </div>
               </div>
 
-              <div className={`w-full flex  gap-4 ${width<550?"flex-col":"flex-row"}`}>
-                <div className={`flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-1/2"}`}>
+              <div
+                className={`w-full flex  gap-4 ${
+                  width < 550 ? "flex-col" : "flex-row"
+                }`}
+              >
+                <div
+                  className={`flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <input
                     type="text"
                     placeholder="UHID"
@@ -369,7 +388,11 @@ const [userData, setUserData] = useState(null);
                     }}
                   />
                 </div>
-                <div className={`flex flex-row justify-start items-center gap-4 ${width<550?"w-full":"w-1/2"}`}>
+                <div
+                  className={`flex flex-row justify-start items-center gap-4 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <p
                     className={`text-base font-semibold ${
                       selectedDate ? "text-black" : "text-[#B3B3B3]"
@@ -396,8 +419,16 @@ const [userData, setUserData] = useState(null);
                 </div>
               </div>
 
-              <div className={`w-full flex  gap-4 ${width<550?"flex-col":"flex-row"}`}>
-                <div className={`flex flex-row justify-between items-center gap-2 ${width<550?"w-full":"w-1/2"}`}>
+              <div
+                className={`w-full flex  gap-4 ${
+                  width < 550 ? "flex-col" : "flex-row"
+                }`}
+              >
+                <div
+                  className={`flex flex-row justify-between items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   {/* Female */}
                   <div
                     onClick={() => setSelectedGender("female")}
@@ -456,7 +487,11 @@ const [userData, setUserData] = useState(null);
                   </div>
                 </div>
 
-                <div className={`flex flex-row justify-center items-center gap-4 ${width<550?"w-full":"w-1/2"}`}>
+                <div
+                  className={`flex flex-row justify-center items-center gap-4 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <p className="w-3/5 font-medium text-[#475467] text-[20px] text-center">
                     Blood Group
                   </p>
@@ -500,8 +535,16 @@ const [userData, setUserData] = useState(null);
                 </div>
               </div>
 
-              <div className={`w-full flex  gap-4 ${width<550?"flex-col":"flex-row"}`}>
-                <div className={`flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-1/2"}`}>
+              <div
+                className={`w-full flex  gap-4 ${
+                  width < 550 ? "flex-col" : "flex-row"
+                }`}
+              >
+                <div
+                  className={`flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <input
                     type="tel"
                     placeholder="PHONE"
@@ -513,7 +556,11 @@ const [userData, setUserData] = useState(null);
                     }}
                   />
                 </div>
-                <div className={`flex flex-col justify-center items-end gap-2 ${width<550?"w-full":"w-1/2"}`}>
+                <div
+                  className={`flex flex-col justify-center items-end gap-2 ${
+                    width < 550 ? "w-full" : "w-1/2"
+                  }`}
+                >
                   <input
                     type="email"
                     placeholder="EMAIL"
@@ -527,8 +574,16 @@ const [userData, setUserData] = useState(null);
                 </div>
               </div>
 
-              <div className={`w-full flex  gap-4 ${width<550?"flex-col":"flex-row"}`}>
-                <div className={`flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-2/5"}`}>
+              <div
+                className={`w-full flex  gap-4 ${
+                  width < 550 ? "flex-col" : "flex-row"
+                }`}
+              >
+                <div
+                  className={`flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-2/5"
+                  }`}
+                >
                   <input
                     type="number"
                     placeholder="HEIGHT (in cm)"
@@ -542,7 +597,11 @@ const [userData, setUserData] = useState(null);
                   />
                 </div>
 
-                <div className={` flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-2/5"}`}>
+                <div
+                  className={` flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-2/5"
+                  }`}
+                >
                   <input
                     type="number"
                     placeholder="WEIGHT (in Kg)"
@@ -556,7 +615,11 @@ const [userData, setUserData] = useState(null);
                   />
                 </div>
 
-                <div className={`flex flex-col justify-start items-center gap-2 ${width<550?"w-full":"w-1/5"}`}>
+                <div
+                  className={`flex flex-col justify-start items-center gap-2 ${
+                    width < 550 ? "w-full" : "w-1/5"
+                  }`}
+                >
                   <input
                     type="text"
                     placeholder="BMI"
