@@ -98,34 +98,47 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
   }, []);
 
   const handleSendremainder = async () => {
-  if (message.trim() === "") {
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 2500);
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: patient.email,
-        subject: 'Questionnaire Pending Reminder',
-        message,
-      }),
-    });
-    
-    const data = await res.json()
-    console.log(data)
-    alert('Email sent (check console for details)')
-    sendRealTimeMessage();
-  } catch (error) {
-    console.error('Error sending email:', error);
-    alert('Failed to send email.');
-  }
-};
+    if (message.trim() === "") {
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 2500);
+      return;
+    }
+  
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: patient.email,
+          subject: 'Questionnaire Pending Reminder',
+          message,
+        }),
+      });
+  
+      let data;
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: 'Invalid JSON response', raw: text };
+      }
+  
+      console.log('Email API response:', data);
+  
+      if (res.ok) {
+        alert('Email sent (check console for details)');
+        sendRealTimeMessage();
+      } else {
+        alert('Failed to send email. Check logs.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email.');
+    }
+  };
+  
 
 const sendRealTimeMessage = () => {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
