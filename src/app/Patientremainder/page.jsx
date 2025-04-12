@@ -105,7 +105,7 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
   }
 
   try {
-    const res = await fetch('../api/send', {
+    const res = await fetch('/api/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

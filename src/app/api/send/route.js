@@ -1,6 +1,6 @@
 // app/api/send/route.js
 import { Resend } from 'resend'
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend("re_7M9JHY5a_PBfDiCxKRaQAaftLAg2eiJM4")
 
 export async function POST(req) {
   try {
