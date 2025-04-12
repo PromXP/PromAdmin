@@ -165,6 +165,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       const result = await response.json();
       console.log("Successfully assigned:", result);
+      handleSendremainder();
 
       // Optionally reset the fields
       setSelectedItems([]);
@@ -177,6 +178,83 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       console.error("Network error:", err);
       setWarning("Network error. Please try again.");
     }
+  };
+
+  const [socket, setSocket] = useState(null);
+  useEffect(() => {
+      const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
+    
+      ws.onopen = () => {
+        console.log("✅ WebSocket connected");
+      };
+    
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("📩 Message from server:", data);
+      };
+    
+      ws.onclose = () => {
+        console.log("❌ WebSocket disconnected");
+      };
+    
+      setSocket(ws);
+    
+      return () => {
+        ws.close();
+      };
+    }, []);
+
+    const handleSendremainder = async () => {
+      if (!patient?.email) {
+        alert("Patient email is missing.");
+        return;
+      }
+    
+      try {
+        const res = await fetch('../api/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: patient.email,
+            subject: 'New Questionnaire Assigned',
+            message: 'Questionnaire Assigned',
+          }),
+        });
+    
+        const data = await res.json();
+        console.log("Email send response:", data);
+    
+        if (!res.ok) {
+          alert("Failed to send email.");
+          return;
+        }
+    
+        alert('✅ Email sent (check console for details)');
+        sendRealTimeMessage();
+      } catch (error) {
+        console.error('❌ Error sending email:', error);
+        alert('Failed to send email.');
+      }
+    };
+    
+  
+  const sendRealTimeMessage = () => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.error("⚠️ WebSocket is not open. Cannot send message.");
+      return;
+    }
+  
+    const payload = {
+      uhid: patient.uhid,
+      email: patient.email,
+      phone_number: patient.phone_number || "N/A",
+      message: `Questionaire Assigned`,
+    };
+  
+    socket.send(JSON.stringify(payload));
+    console.log("📤 Sent via WebSocket:", payload);
   };
 
   const [userData, setUserData] = useState(null);

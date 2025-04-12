@@ -198,31 +198,14 @@ export default function Home() {
                 />
               </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex flex-wrap justify-between items-center text-sm">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="checkbox"
-                    className="h-5 w-5 text-[#005585] border-gray-300 border-4 rounded focus:ring-[#005585]"
-                  />
-                  <label
-                    htmlFor="checkbox"
-                    className="text-[#313131] font-medium"
-                  >
-                    Remember Me
-                  </label>
-                </div>
-                <p className="text-[#FF8682] cursor-pointer">
-                  Forgot Password?
-                </p>
-              </div>
+             
 
               <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer" onClick={handleLogin}>
                 Login
               </button>
             </div>
 
+          
           </div>
 
           {/* Right Section - Image*/}

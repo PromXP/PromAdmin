@@ -71,8 +71,31 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
   }
 
   const [message, setMessage] = useState("");
-
+  const [socket, setSocket] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
+
+  useEffect(() => {
+    const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
+  
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+  
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("📩 Message from server:", data);
+    };
+  
+    ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
+    };
+  
+    setSocket(ws);
+  
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   const handleSendremainder = async () => {
   if (message.trim() === "") {
@@ -97,11 +120,31 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
     const data = await res.json()
     console.log(data)
     alert('Email sent (check console for details)')
+    sendRealTimeMessage();
   } catch (error) {
     console.error('Error sending email:', error);
     alert('Failed to send email.');
   }
 };
+
+const sendRealTimeMessage = () => {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    console.error("⚠️ WebSocket is not open. Cannot send message.");
+    return;
+  }
+
+  const payload = {
+    uhid: patient.uhid,
+    email: patient.email,
+    phone_number: patient.phone_number || "N/A",
+    message: message,
+  };
+
+  socket.send(JSON.stringify(payload));
+  console.log("📤 Sent via WebSocket:", payload);
+  onCloserem();
+};
+
 
 
   if (!isOpenrem) return null;

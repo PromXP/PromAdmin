@@ -28,6 +28,7 @@ const poppins = Poppins({
 });
 
 const page = () => {
+  const router = useRouter();
   const useWindowSize = () => {
       const [size, setSize] = useState({
         width: 0,
@@ -65,8 +66,6 @@ const page = () => {
     switch (selected) {
       case 0:
         return <HomeDashboard />;
-      case 1:
-        return <ComponentTwo />;
       default:
         return null;
     }
@@ -190,6 +189,12 @@ const page = () => {
                     ? "bg-white/40 backdrop-blur-md shadow-lg border border-white/30"
                     : "opacity-100"
                 }`}
+
+                onClick={() => {
+                  router.push("/");
+                  localStorage.removeItem("userData");
+                }}
+                
                 
               >
                 <svg
