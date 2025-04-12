@@ -48,25 +48,36 @@ export default function Home() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const handleLogin = async () => {
-    try {
-      const response = await axios.post("https://promapi.onrender.com/login", {
-        identifier,
-        password,
-        role: "admin", // 🔒 Fixed to "doctor"
-      });
-  
-      console.log("Login successful:", response.data);
-  
-      // Store login data for access on /Landing page
-      localStorage.setItem("userData", JSON.stringify(response.data));
-  
-      // Redirect to landing page
-      router.push("/Landing");
-    } catch (error) {
-      console.error("Login failed:", error.response?.data || error.message);
-      alert("Login failed. Please check your credentials.");
+    if (typeof window !== "undefined") {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          "https://promapi.onrender.com/login",
+          {
+            identifier,
+            password,
+            role: "admin",
+          }
+        );
+
+        // Store only identifier, password, and role in localStorage
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            identifier,
+            password,
+            role: "admin",
+          })
+        );
+
+        router.push("/Landing");
+      } catch (error) {
+        alert("Login failed. Please check your credentials.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
   
@@ -126,7 +137,7 @@ export default function Home() {
                 className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer"
                 onClick={handleLogin}
               >
-                Login
+                {loading ? "Logging in..." : "Login"}
               </button>
             </div>
 
@@ -201,7 +212,7 @@ export default function Home() {
              
 
               <button className="w-full bg-[#005585] text-lg text-white py-2.5 rounded-lg cursor-pointer" onClick={handleLogin}>
-                Login
+              {loading ? "Logging in..." : "Login"}
               </button>
             </div>
 

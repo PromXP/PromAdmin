@@ -35,7 +35,7 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = ({ isOpenacc, onCloseacc, children }) => {
+const page = ({ isOpenacc, onCloseacc, userData }) => {
   const useWindowSize = () => {
     const [size, setSize] = useState({
       width: 0,
@@ -73,15 +73,38 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
 
   const handleDateChange = (e) => {
     const dateValue = e.target.value;
+    console.log("Raw input value:", dateValue);
+  
     if (dateValue) {
-      const formattedDate = new Date(dateValue).toLocaleDateString("en-GB", {
+      const selected = new Date(dateValue);
+      const today = new Date();
+  
+      // Remove time component from today's date
+      today.setHours(0, 0, 0, 0);
+      selected.setHours(0, 0, 0, 0);
+  
+      console.log("Selected Date:", selected.toDateString());
+      console.log("Today's Date:", today.toDateString());
+  
+      if (selected >= today) {
+        console.warn("Invalid birth date selected.");
+        alert("Birth date cannot be today or a future date.");
+        setSelectedDate(null);
+        return;
+      }
+  
+      const formattedDate = selected.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       });
+  
+      console.log("Formatted Date:", formattedDate);
       setSelectedDate(formattedDate);
     }
   };
+  
+  
 
   const [opendrop, setOpendrop] = useState(false);
 
@@ -159,15 +182,6 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
   };
 
   const [alertMessage, setAlertMessage] = useState("");
-  const [userData, setUserData] = useState(null);
-  useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      console.log("Retrieved user from localStorage:", parsedUser);
-      setUserData(parsedUser);
-    }
-  }, []);
 
   const handleSendremainder = async () => {
     if (!firstName.trim()) return showWarning("First Name is required.");
@@ -250,6 +264,7 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
       const result = await response.json();
       console.log("Submission successful:", result);
       onCloseacc();
+      window.location.reload();
       // Optionally, show success message here
     } catch (error) {
       console.error("Error submitting data:", error);

@@ -64,11 +64,54 @@ const page = () => {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      console.log("Retrieved user from localStorage:", parsedUser);
-      setUserData(parsedUser);
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("userData");
+
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Retrieved user from localStorage:", parsedUser);
+
+        if (parsedUser.password === "doctor@123") {
+          setpassopen(true);
+        }
+
+        // Attempt to log in again using the stored credentials
+        const loginWithStoredUser = async () => {
+          try {
+            const response = await axios.post(
+              "https://promapi.onrender.com/login",
+              {
+                identifier: parsedUser.identifier,
+                password: parsedUser.password,
+                role: parsedUser.role, // Assuming role is stored and needed
+              }
+            );
+
+            // Handle successful login response
+            localStorage.setItem(
+              "userData",
+              JSON.stringify({
+                identifier: parsedUser.identifier,
+                password: parsedUser.password,
+                role: parsedUser.role,
+              })
+            );
+
+            setUserData(response.data); // Store the full response data (e.g., tokens)
+            localStorage.setItem("uhid", response.data.user.uhid);
+            console.log(
+              "Successfully logged in with stored credentials",
+              response.data.user.uhid
+            );
+          } catch (error) {
+            console.error("Login failed with stored credentials", error);
+            alert("Login failed. Please check your credentials.");
+          }
+        };
+
+        // Call login function
+        loginWithStoredUser();
+      }
     }
   }, []);
 
@@ -1017,13 +1060,17 @@ const page = () => {
         patient={selectedPatient}
       />
       <Accountcreation
-        isOpenacc={isOpenacc}
-        onCloseacc={() => setIsOpenacc(false)}
-      />
-      <Accountcreationdoctor
-        isOpenaccdoc={isOpenaccdoc}
-        onCloseaccdoc={() => setIsOpenaccdoc(false)}
-      />
+  isOpenacc={isOpenacc}
+  onCloseacc={() => setIsOpenacc(false)}
+  userData={userData}
+/>
+
+<Accountcreationdoctor
+  isOpenaccdoc={isOpenaccdoc}
+  onCloseaccdoc={() => setIsOpenaccdoc(false)}
+  userData={userData}
+/>
+
     </>
   );
 };

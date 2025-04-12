@@ -35,7 +35,7 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
+const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
   const useWindowSize = () => {
       const [size, setSize] = useState({
         width: 0,
@@ -168,15 +168,6 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
   };
 
   const [alertMessage, setAlertMessage] = useState("");
-  const [userData, setUserData] = useState(null);
-    useEffect(() => {
-        const storedUser = localStorage.getItem("userData");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          console.log("Retrieved user from localStorage:", parsedUser);
-          setUserData(parsedUser);
-        }
-      }, []);
 
       const handleSendremainder = async () => {
         if (!firstName.trim()) return showWarning("First Name is required.");
@@ -222,6 +213,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, children }) => {
           const result = await response.json();
           console.log("Doctor registration successful:", result);
           onCloseaccdoc(); // If you have a modal or dialog to close
+          window.location.reload();
         } catch (error) {
           console.error("Error submitting doctor data:", error);
           showWarning("Something went wrong. Please try again.");
