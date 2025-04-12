@@ -210,8 +210,10 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
       bmi: parseFloat(bmi.toFixed(2)),
       email: email,
       phone_number: phone,
-      doctor_assigned: "Dr. Smith", // replace with real data
+      doctor_assigned: "", 
+      doctor_name: "",// replace with real data
       admin_assigned: userData?.user?.email, // replace with real data
+      admin_name: "",
       questionnaire_assigned: [],
       questionnaire_scores: [],
       surgery_scheduled: {
@@ -220,13 +222,13 @@ const page = ({ isOpenacc, onCloseacc, children }) => {
       },
       post_surgery_details: {
         date_of_surgery: "2025-04-09",
-        surgeon: "Dr. XYZ", // replace accordingly
-        surgery_name: "Dr. XYZ", // if different
-        procedure: "Knee Replacement", // replace
-        implant: "Titanium X", // replace
-        technology: "Robotic Assist", // replace
+        surgeon: "", // replace accordingly
+        surgery_name: "", // if different
+        procedure: "", // replace
+        implant: "", // replace
+        technology: "", // replace
       },
-      current_status: "pre_op",
+      current_status: "PRE OP",
     };
 
     try {

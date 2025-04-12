@@ -426,7 +426,7 @@ if (patient?.questionnaire_scores) {
   patient.questionnaire_scores.forEach(scoreEntry => {
     const scoreName = scoreEntry.name;
     const period = periodMap[scoreEntry.period] || scoreEntry.period;
-    const score = scoreEntry.score;
+    const score = scoreEntry.score[0];
 
     if (!scoreMap[scoreName]) {
       scoreMap[scoreName] = {};
@@ -990,13 +990,20 @@ if (patient?.questionnaire_scores) {
                     width < 1095 ? "justify-start" : "justify-end"
                   }`}
                 >
-                  <p
-                    className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
-                    style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={handleAssignsurgery}
-                  >
-                    ASSIGN
-                  </p>
+                 <p
+  className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
+  style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
+  onClick={() => {
+    if (!patient?.doctor_name) {
+      alert("Please assign a doctor first");
+      return;
+    }
+    handleAssignsurgery();
+  }}
+>
+  ASSIGN
+</p>
+
                 </div>
               </div>
             </div>
