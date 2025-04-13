@@ -357,12 +357,24 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   const handleDateChangesurgery = (e) => {
     const selectedDate = e.target.value;
-
-    // Use Date.now() to debounce false triggers during navigation
+  
     if (!selectedDate) return;
-
+  
+    const today = new Date();
+    const selected = new Date(selectedDate);
+  
+    // Set time to 00:00:00 to compare only the date part
+    today.setHours(0, 0, 0, 0);
+    selected.setHours(0, 0, 0, 0);
+  
+    if (selected < today) {
+      alert("Please select a valid future or current date.");
+      return;
+    }
+  
     setSelectedDatesurgery(selectedDate);
   };
+  
 
   const handleTimeChange = (e) => {
     setSelectedTime(e.target.value);
