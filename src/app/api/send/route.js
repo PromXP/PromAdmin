@@ -7,8 +7,8 @@ export async function POST(req) {
     const { email, subject, message } = await req.json();
 
     const data = await resend.emails.send({
-      from: 'Xolabs <onboarding@resend.dev>',
-      to: 'ronaldshawv@thewad.co', // ✅ dynamic recipient
+      from: 'Xolabs Health <ronaldshawv@thewad.co>',
+      to: email, // ✅ dynamic recipient
       subject,
       html: `<div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 40px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">

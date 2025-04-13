@@ -210,6 +210,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
     if (!/^\d{10}$/.test(phone.trim())) {
       return showWarning("Phone number must be exactly 10 digits.");
     }
+    
     if (!email.trim()) return showWarning("Email is required.");
     if (!heightbmi.trim()) return showWarning("Height is required.");
     if (!weight.trim()) return showWarning("Weight is required.");
@@ -577,6 +578,8 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
                     placeholder="PHONE"
                     className="w-full text-black py-2 px-4 rounded-sm text-base  outline-none"
                     value={phone}
+                    maxLength={10}
+                    minLength={10}
                     onChange={(e) => setPhone(e.target.value)}
                     style={{
                       backgroundColor: "rgba(217, 217, 217, 0.5)", // white with 50% opacity

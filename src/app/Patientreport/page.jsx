@@ -614,8 +614,8 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                             DOCTOR ASSIGNED
                           </p>
                           <p className="text-black font-bold text-6">
-                            {patient.doctor_assigned
-                              ? patient.doctor_assigned
+                            {patient.doctor_name
+                              ? patient.doctor_name
                               : "-"}
                           </p>
                         </div>

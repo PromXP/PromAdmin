@@ -225,20 +225,19 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response:", errorData);
-        throw new Error(errorData?.detail || "Failed to register doctor.");
-      }
-
-      const result = await response.json();
-      console.log("Doctor registration successful:", result);
-      onCloseaccdoc(); // If you have a modal or dialog to close
-      window.location.reload();
-    } catch (error) {
+          });
+      
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error response:", errorData);
+            throw new Error(errorData?.detail || "Failed to register doctor.");
+          }
+      
+          const result = await response.json();
+          console.log("Doctor registration successful:", result);
+          onCloseaccdoc(); // If you have a modal or dialog to close
+          window.location.reload();
+        } catch (error) {
       console.error("Error submitting doctor data:", error);
       showWarning("Something went wrong. Please try again.");
     }
