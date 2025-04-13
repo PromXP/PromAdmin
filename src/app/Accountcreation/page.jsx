@@ -74,37 +74,35 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
   const handleDateChange = (e) => {
     const dateValue = e.target.value;
     console.log("Raw input value:", dateValue);
-  
+
     if (dateValue) {
       const selected = new Date(dateValue);
       const today = new Date();
-  
+
       // Remove time component from today's date
       today.setHours(0, 0, 0, 0);
       selected.setHours(0, 0, 0, 0);
-  
+
       console.log("Selected Date:", selected.toDateString());
       console.log("Today's Date:", today.toDateString());
-  
+
       if (selected >= today) {
         console.warn("Invalid birth date selected.");
         alert("Birth date cannot be today or a future date.");
         setSelectedDate(null);
         return;
       }
-  
+
       const formattedDate = selected.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       });
-  
+
       console.log("Formatted Date:", formattedDate);
       setSelectedDate(formattedDate);
     }
   };
-  
-  
 
   const [opendrop, setOpendrop] = useState(false);
 
@@ -188,13 +186,24 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
     if (!lastName.trim()) return showWarning("Last Name is required.");
     if (!uhid.trim()) return showWarning("UHID is required.");
     if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
-    
-    // Calculate age (simple version, assuming DOB format: "YYYY-MM-DD")
-    const birthYear = new Date(selectedDate).getFullYear();
-    const currentYear = new Date().getFullYear();
-    const age = currentYear - birthYear;
 
-    if(age<=0) return showWarning("Select Date of Birth Correctly");
+    // Calculate age (simple version, assuming DOB format: "YYYY-MM-DD")
+    const today = new Date();
+    const birthDate = new Date(selectedDate);
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    // Check if the birthday has occurred yet this year
+    const hasHadBirthdayThisYear =
+      today.getMonth() > birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() >= birthDate.getDate());
+
+    if (!hasHadBirthdayThisYear) {
+      age--;
+    }
+
+    if (age <= 0) return showWarning("Select Date of Birth Correctly");
     if (!selectedGender.trim()) return showWarning("Gender is required.");
     if (selectedOptiondrop === "Select")
       return showWarning("Blood group must be selected.");
@@ -202,9 +211,6 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
     if (!email.trim()) return showWarning("Email is required.");
     if (!heightbmi.trim()) return showWarning("Height is required.");
     if (!weight.trim()) return showWarning("Weight is required.");
-    
-
-    
 
     // Calculate BMI
     const heightInMeters = parseFloat(heightbmi) / 100;
@@ -224,8 +230,8 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       bmi: parseFloat(bmi.toFixed(2)),
       email: email,
       phone_number: phone,
-      doctor_assigned: "", 
-      doctor_name: "",// replace with real data
+      doctor_assigned: "",
+      doctor_name: "", // replace with real data
       admin_assigned: userData?.user?.email, // replace with real data
       admin_name: "",
       questionnaire_assigned: [],
@@ -268,7 +274,9 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       // Optionally, show success message here
     } catch (error) {
       console.error("Error submitting data:", error);
-      showWarning("This UHID, email, or phone number is already used for another patient.");
+      showWarning(
+        "This UHID, email, or phone number is already used for another patient."
+      );
     }
   };
 

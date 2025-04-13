@@ -37,28 +37,28 @@ const poppins = Poppins({
 
 const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
   const useWindowSize = () => {
-      const [size, setSize] = useState({
-        width: 0,
-        height: 0,
-      });
-    
-      useEffect(() => {
-        const updateSize = () => {
-          setSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        };
-    
-        updateSize(); // set initial size
-        window.addEventListener("resize", updateSize);
-        return () => window.removeEventListener("resize", updateSize);
-      }, []);
-    
-      return size;
-    };
-  
-    const { width, height } = useWindowSize();
+    const [size, setSize] = useState({
+      width: 0,
+      height: 0,
+    });
+
+    useEffect(() => {
+      const updateSize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+
+      updateSize(); // set initial size
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }, []);
+
+    return size;
+  };
+
+  const { width, height } = useWindowSize();
 
   // console.log("Screen Width:", width, "Screen Height:", height);
   const [message, setMessage] = useState("");
@@ -169,58 +169,78 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
 
   const [alertMessage, setAlertMessage] = useState("");
 
-      const handleSendremainder = async () => {
-        if (!firstName.trim()) return showWarning("First Name is required.");
-        if (!uhid.trim()) return showWarning("UHID is required.");
-        if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
-        if (!selectedGender.trim()) return showWarning("Gender is required.");
-        if (!phone.trim()) return showWarning("Phone number is required.");
-        if (!email.trim()) return showWarning("Email is required.");
-      
-        // Calculate age from selectedDate (DOB)
-        const birthYear = new Date(selectedDate).getFullYear();
-        const currentYear = new Date().getFullYear();
-        const age = currentYear - birthYear;
-      
-        const payload = {
-          doctor_name: firstName.trim() +" "+ lastName.trim(),
-          gender: selectedGender.trim(),
-          age: age,
-          designation: "leg surgeon here",
-          email: email.trim(),
-          uhid: uhid.trim(),
-          phone_number: phone.trim(),
-          password: "doctor@123",
-          admin_created: userData?.user?.email,
-          patients_assigned: [],
-        };
-      
-        try {
-          const response = await fetch("https://promapi.onrender.com/registerdoctor", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-      
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error response:", errorData);
-            throw new Error(errorData?.detail || "Failed to register doctor.");
-          }
-      
-          const result = await response.json();
-          console.log("Doctor registration successful:", result);
-          onCloseaccdoc(); // If you have a modal or dialog to close
-          window.location.reload();
-        } catch (error) {
-          console.error("Error submitting doctor data:", error);
-          showWarning("Something went wrong. Please try again.");
+  const handleSendremainder = async () => {
+    if (!firstName.trim()) return showWarning("First Name is required.");
+    if (!lastName.trim()) return showWarning("Last Name is required.");
+    if (!uhid.trim()) return showWarning("UHID is required.");
+    if (!selectedDate.trim()) return showWarning("Date of Birth is required.");
+
+    // Calculate age (simple version, assuming DOB format: "YYYY-MM-DD")
+    const today = new Date();
+    const birthDate = new Date(selectedDate);
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    // Check if the birthday has occurred yet this year
+    const hasHadBirthdayThisYear =
+      today.getMonth() > birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() >= birthDate.getDate());
+
+    if (!hasHadBirthdayThisYear) {
+      age--;
+    }
+
+
+    if (age <= 0) return showWarning("Select Date of Birth Correctly");
+    if (!selectedGender.trim()) return showWarning("Gender is required.");
+    // if (selectedOptiondrop === "Select")
+    //   return showWarning("Blood group must be selected.");
+    if (!phone.trim()) return showWarning("Phone number is required.");
+    if (!email.trim()) return showWarning("Email is required.");
+
+    
+
+    const payload = {
+      doctor_name: firstName.trim() + " " + lastName.trim(),
+      gender: selectedGender.trim(),
+      age: age,
+      designation: "leg surgeon here",
+      email: email.trim(),
+      uhid: uhid.trim(),
+      phone_number: phone.trim(),
+      password: "doctor@123",
+      admin_created: userData?.user?.email,
+      patients_assigned: [],
+    };
+
+    try {
+      const response = await fetch(
+        "https://promapi.onrender.com/registerdoctor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         }
-      };
-      
-  
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        throw new Error(errorData?.detail || "Failed to register doctor.");
+      }
+
+      const result = await response.json();
+      console.log("Doctor registration successful:", result);
+      onCloseaccdoc(); // If you have a modal or dialog to close
+      window.location.reload();
+    } catch (error) {
+      console.error("Error submitting doctor data:", error);
+      showWarning("Something went wrong. Please try again.");
+    }
+  };
 
   const showWarning = (message) => {
     setAlertMessage(message);
@@ -528,8 +548,6 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
                   />
                 </div>
               </div>
-
-             
 
               <div className="w-full flex flex-row justify-center items-center">
                 <div className="w-1/2 flex flex-row justify-start items-center">
