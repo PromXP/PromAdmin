@@ -210,7 +210,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     }
 
     try {
-      const res = await fetch("../api/send", {
+      const res = await fetch("/api/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
