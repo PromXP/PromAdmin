@@ -1,5 +1,7 @@
 // app/api/send/route.js
 import { Resend } from 'resend'
+console.log("✅ RESEND_API_KEY available:", !!process.env.RESEND_API_KEY);
+
 const resend = new Resend(process.env.RESEND_API_KEY); // ✅ best practice
 
 export async function POST(req) {
