@@ -208,7 +208,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       alert("Patient email is missing.");
       return;
     }
-
+  
     try {
       const res = await fetch("/api/send", {
         method: "POST",
@@ -221,15 +221,22 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
           message: "Questionnaire Assigned",
         }),
       });
-
-      const data = await res.json();
+  
+      let data;
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: "Invalid JSON response", raw: text };
+      }
+  
       console.log("Email send response:", data);
-
+  
       if (!res.ok) {
         alert("Failed to send email.");
         return;
       }
-
+  
       alert("✅ Email sent (check console for details)");
       sendRealTimeMessage();
     } catch (error) {
@@ -237,6 +244,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       alert("Failed to send email.");
     }
   };
+  
+
+  
 
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
