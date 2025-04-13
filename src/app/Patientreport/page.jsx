@@ -142,7 +142,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
         completed: 0,
       })),
     };
-    
 
     try {
       const response = await fetch(
@@ -182,77 +181,76 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   const [socket, setSocket] = useState(null);
   useEffect(() => {
-      const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
-    
-      ws.onopen = () => {
-        console.log("✅ WebSocket connected");
-      };
-    
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("📩 Message from server:", data);
-      };
-    
-      ws.onclose = () => {
-        console.log("❌ WebSocket disconnected");
-      };
-    
-      setSocket(ws);
-    
-      return () => {
-        ws.close();
-      };
-    }, []);
+    const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
 
-    const handleSendremainder = async () => {
-      if (!patient?.email) {
-        alert("Patient email is missing.");
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("📩 Message from server:", data);
+    };
+
+    ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
+    };
+
+    setSocket(ws);
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  const handleSendremainder = async () => {
+    if (!patient?.email) {
+      alert("Patient email is missing.");
+      return;
+    }
+
+    try {
+      const res = await fetch("../api/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: patient.email,
+          subject: "New Questionnaire Assigned",
+          message: "Questionnaire Assigned",
+        }),
+      });
+
+      const data = await res.json();
+      console.log("Email send response:", data);
+
+      if (!res.ok) {
+        alert("Failed to send email.");
         return;
       }
-    
-      try {
-        const res = await fetch('../api/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: patient.email,
-            subject: 'New Questionnaire Assigned',
-            message: 'Questionnaire Assigned',
-          }),
-        });
-    
-        const data = await res.json();
-        console.log("Email send response:", data);
-    
-        if (!res.ok) {
-          alert("Failed to send email.");
-          return;
-        }
-    
-        alert('✅ Email sent (check console for details)');
-        sendRealTimeMessage();
-      } catch (error) {
-        console.error('❌ Error sending email:', error);
-        alert('Failed to send email.');
-      }
-    };
-    
-  
+
+      alert("✅ Email sent (check console for details)");
+      sendRealTimeMessage();
+    } catch (error) {
+      console.error("❌ Error sending email:", error);
+      alert("Failed to send email.");
+    }
+  };
+
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("⚠️ WebSocket is not open. Cannot send message.");
       return;
     }
-  
+
     const payload = {
       uhid: patient.uhid,
       email: patient.email,
       phone_number: patient.phone_number || "N/A",
       message: `Questionaire Assigned`,
     };
-  
+
     socket.send(JSON.stringify(payload));
     console.log("📤 Sent via WebSocket:", payload);
   };
@@ -283,12 +281,13 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const handleAssigndoc = async () => {
     if (!selectedDoctor) {
       setShowAlert(true);
+      setAlertMessage("Please select a doctor.");
       setTimeout(() => setShowAlert(false), 2500);
       return;
     }
   
-    const doctorName = selectedDoctor.split(" - ")[1]; // Extract email
-    const patientUhid = patient?.uhid; // Replace this with your selected patient value
+    const doctorName = selectedDoctor.split(" - ")[1]; // Extract doctor name
+    const patientUhid = patient?.uhid; // Selected patient value
   
     if (!patientUhid) {
       console.error("No patient selected for assignment.");
@@ -299,16 +298,19 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       uhid: patient.uhid,
       doctor_assigned: doctorName,
     };
-    console.log(doctorName)
+    console.log(doctorName);
   
     try {
-      const response = await fetch("https://promapi.onrender.com/update-doctor", {
-        method: "PUT", // or "PUT" depending on your backend
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "https://promapi.onrender.com/update-doctor",
+        {
+          method: "PUT", // or "PUT" depending on your backend
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
   
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -316,10 +318,14 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
-      // You can show a success message here or refresh data
   
+      // Show an alert box indicating that the UI will update soon
+      alert("Doctor assigned. The changes will reflect soon.");
+  
+      // Optionally refresh the data or trigger a UI update
     } catch (error) {
       console.error("Error assigning doctor:", error);
+      alert("Error assigning doctor, please try again.");
     }
   };
   
@@ -362,20 +368,20 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       setWarning("Please select both date and time.");
       return;
     }
-  
+
     const selectedDateTime = new Date(`${selectedDatesurgery}T${selectedTime}`);
     const now = new Date();
-  
+
     if (selectedDateTime < now) {
       setWarning("Selected date and time cannot be in the past.");
       return;
     }
-  
+
     if (!patient?.uhid) {
       console.error("No patient selected for surgery scheduling.");
       return;
     }
-  
+
     const payload = {
       uhid: patient.uhid,
       surgery_scheduled: {
@@ -383,64 +389,65 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
         time: selectedTime,
       },
     };
-  
+
     try {
-      const response = await fetch("https://promapi.onrender.com/update-surgery-schedule", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-  
+      const response = await fetch(
+        "https://promapi.onrender.com/update-surgery-schedule",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const result = await response.json();
       console.log("Surgery scheduled successfully:", result);
       // Optionally reset form or show success feedback
-  
     } catch (error) {
       console.error("Error scheduling surgery:", error);
     }
   };
-  
+
   const columns = ["SCORE", "Preop", "6W", "3M", "6M", "1Y", "2Y"];
-const periodMap = {
-  "PreOP": "Preop",
-  "Pre Op": "Preop",
-  "pre op": "Preop",
-  "6W": "6W",
-  "3M": "3M",
-  "6M": "6M",
-  "1Y": "1Y",
-  "2Y": "2Y"
-};
+  const periodMap = {
+    PreOP: "Preop",
+    "Pre Op": "Preop",
+    "pre op": "Preop",
+    "6W": "6W",
+    "3M": "3M",
+    "6M": "6M",
+    "1Y": "1Y",
+    "2Y": "2Y",
+  };
 
-let data = [];
+  let data = [];
 
-if (patient?.questionnaire_scores) {
-  const scoreMap = {};
+  if (patient?.questionnaire_scores) {
+    const scoreMap = {};
 
-  patient.questionnaire_scores.forEach(scoreEntry => {
-    const scoreName = scoreEntry.name;
-    const period = periodMap[scoreEntry.period] || scoreEntry.period;
-    const score = scoreEntry.score[0];
+    patient.questionnaire_scores.forEach((scoreEntry) => {
+      const scoreName = scoreEntry.name;
+      const period = periodMap[scoreEntry.period] || scoreEntry.period;
+      const score = scoreEntry.score[0];
 
-    if (!scoreMap[scoreName]) {
-      scoreMap[scoreName] = {};
-    }
+      if (!scoreMap[scoreName]) {
+        scoreMap[scoreName] = {};
+      }
 
-    scoreMap[scoreName][period] = score;
-  });
+      scoreMap[scoreName][period] = score;
+    });
 
-  data = Object.entries(scoreMap).map(([name, valuesObj]) => {
-    const values = columns.slice(1).map(period => valuesObj[period] ?? "");
-    return { label: name, values };
-  });
-}
-
+    data = Object.entries(scoreMap).map(([name, valuesObj]) => {
+      const values = columns.slice(1).map((period) => valuesObj[period] ?? "");
+      return { label: name, values };
+    });
+  }
 
   const getColor = (val) => {
     if (val === "") return "#B0C4C7"; // default light grayish-blue
@@ -990,20 +997,19 @@ if (patient?.questionnaire_scores) {
                     width < 1095 ? "justify-start" : "justify-end"
                   }`}
                 >
-                 <p
-  className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
-  style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-  onClick={() => {
-    if (!patient?.doctor_name) {
-      alert("Please assign a doctor first");
-      return;
-    }
-    handleAssignsurgery();
-  }}
->
-  ASSIGN
-</p>
-
+                  <p
+                    className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
+                    style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
+                    onClick={() => {
+                      if (!patient?.doctor_name) {
+                        alert("Please assign a doctor first");
+                        return;
+                      }
+                      handleAssignsurgery();
+                    }}
+                  >
+                    ASSIGN
+                  </p>
                 </div>
               </div>
             </div>
@@ -1017,118 +1023,147 @@ if (patient?.questionnaire_scores) {
             }`}
           >
             <div
-  className={`bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
-    width < 970 ? "w-full" : "w-[55%]"
-  }`}
->
-  <p className="w-full font-bold text-[#005585] tracking-[6px]">
-    PATIENT REPORTED OUTCOMES
-  </p>
-
-  <div className="w-full overflow-x-auto">
-    <table className="min-w-full table-fixed">
-      <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
-        <tr>
-          {columns.map((col, idx) => (
-            <th key={idx} className="px-4 py-1.5 text-center">
-              {col}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody className="bg-white text-[14px] font-semibold">
-        {data.length > 0 ? (
-          data.map((row, idx) => (
-            <tr key={idx}>
-              <td className="px-4 py-2 text-[#1F2937]">{row.label}</td>
-              {row.values.map((val, vIdx) => (
-                <td
-                  key={vIdx}
-                  className="px-4 py-3 text-center"
-                  style={{ color: getColor(val) }}
-                >
-                  {val}
-                </td>
-              ))}
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td
-              colSpan={columns.length}
-              className="px-4 py-4 text-center text-[#9CA3AF]"
+              className={`bg-white rounded-2xl px-4 py-4 flex flex-col gap-4 shadow-lg ${
+                width < 970 ? "w-full" : "w-[55%]"
+              }`}
             >
-              No questionnaires answered
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
+              <p className="w-full font-bold text-[#005585] tracking-[6px]">
+                PATIENT REPORTED OUTCOMES
+              </p>
 
+              <div className="w-full overflow-x-auto">
+                <table className="min-w-full table-fixed">
+                  <thead className="bg-[#D9D9D9] text-[#475467] text-[14px] font-medium text-center">
+                    <tr>
+                      {columns.map((col, idx) => (
+                        <th key={idx} className="px-4 py-1.5 text-center">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white text-[14px] font-semibold">
+                    {data.length > 0 ? (
+                      data.map((row, idx) => (
+                        <tr key={idx}>
+                          <td className="px-4 py-2 text-[#1F2937]">
+                            {row.label}
+                          </td>
+                          {row.values.map((val, vIdx) => (
+                            <td
+                              key={vIdx}
+                              className="px-4 py-3 text-center"
+                              style={{ color: getColor(val) }}
+                            >
+                              {val}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={columns.length}
+                          className="px-4 py-4 text-center text-[#9CA3AF]"
+                        >
+                          No questionnaires answered
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-<div
-  className={`bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
-    width < 970 ? "w-full gap-4" : "w-[45%]"
-  }`}
->
-  <p className="w-full font-bold text-black">SURGERY DETAILS</p>
+            <div
+              className={`bg-white rounded-2xl px-4 py-4 flex flex-col justify-between shadow-lg ${
+                width < 970 ? "w-full gap-4" : "w-[45%]"
+              }`}
+            >
+              <p className="w-full font-bold text-black">SURGERY DETAILS</p>
 
-  <div className={`w-full flex ${width < 530 ? "flex-col gap-4" : "flex-row"}`}>
-    <div className={`flex flex-row ${width < 530 ? "w-full" : "w-[60%]"}`}>
-      <div className="w-1/2 flex flex-col">
-        <p className="font-semibold text-[#475467] text-sm">DATE OF SURGERY</p>
-        <p className="font-medium italic text-[#475467] text-sm">
-        {patient?.post_surgery_details?.date_of_surgery
-  ? new Date(patient.post_surgery_details.date_of_surgery).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-    })
-  : "Not Available"}
+              <div
+                className={`w-full flex ${width < 530 ? "flex-col gap-4" : "flex-row"}`}
+              >
+                <div
+                  className={`flex flex-row ${width < 530 ? "w-full" : "w-[60%]"}`}
+                >
+                  <div className="w-1/2 flex flex-col">
+                    <p className="font-semibold text-[#475467] text-sm">
+                      DATE OF SURGERY
+                    </p>
+                    <p className="font-medium italic text-[#475467] text-sm">
+                      {patient?.post_surgery_details?.date_of_surgery
+                        ? new Date(
+                            patient.post_surgery_details.date_of_surgery
+                          ).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "2-digit",
+                          })
+                        : "Not Available"}
+                    </p>
+                  </div>
+                  <div className="w-1/2 flex flex-col justify-end items-center">
+                    <p className="font-semibold text-[#475467] text-sm">
+                      SURGEON
+                    </p>
+                    <p className="font-medium italic text-[#475467] text-sm">
+                      {patient?.post_surgery_details?.surgeon ||
+                        "Not Available"}
+                    </p>
+                  </div>
+                </div>
 
-        </p>
-      </div>
-      <div className="w-1/2 flex flex-col justify-end items-center">
-        <p className="font-semibold text-[#475467] text-sm">SURGEON</p>
-        <p className="font-medium italic text-[#475467] text-sm">
-          {patient?.post_surgery_details?.surgeon || "Not Available"}
-        </p>
-      </div>
-    </div>
+                <div
+                  className={`flex flex-col ${width < 530 ? "w-full" : "w-[40%]"}`}
+                >
+                  <p className="font-semibold text-[#475467] text-sm">
+                    SURGERY NAME
+                  </p>
+                  <p className="font-medium italic text-[#475467] text-sm">
+                    {patient?.post_surgery_details?.surgery_name ||
+                      "Not Available"}
+                  </p>
+                </div>
+              </div>
 
-    <div className={`flex flex-col ${width < 530 ? "w-full" : "w-[40%]"}`}>
-      <p className="font-semibold text-[#475467] text-sm">SURGERY NAME</p>
-      <p className="font-medium italic text-[#475467] text-sm">
-        {patient?.post_surgery_details?.surgery_name || "Not Available"}
-      </p>
-    </div>
-  </div>
+              <div className="w-full flex flex-col">
+                <p className="font-semibold text-[#475467] text-sm">
+                  PROCEDURE
+                </p>
+                <p className="font-medium text-[#475467] text-sm">
+                  {patient?.post_surgery_details?.procedure?.toLowerCase() ||
+                    "Not Available"}
+                </p>
+              </div>
 
-  <div className="w-full flex flex-col">
-    <p className="font-semibold text-[#475467] text-sm">PROCEDURE</p>
-    <p className="font-medium text-[#475467] text-sm">
-    {patient?.post_surgery_details?.procedure?.toLowerCase() || "Not Available"}
-    </p>
-  </div>
-
-  <div className={`w-full flex ${width < 570 ? "flex-col gap-4" : "flex-row"}`}>
-    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
-      <p className="font-semibold text-[#475467] text-sm">IMPLANT</p>
-      <p className="font-medium text-[#475467] text-sm">
-        {patient?.post_surgery_details?.implant || "Not Available"}
-      </p>
-    </div>
-    <div className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}>
-      <p className="font-semibold text-[#475467] text-sm">TECHNOLOGY</p>
-      <p className="font-medium italic text-[#475467] text-sm">
-        {patient?.post_surgery_details?.technology || "Not Available"}
-      </p>
-    </div>
-  </div>
-</div>
-
+              <div
+                className={`w-full flex ${width < 570 ? "flex-col gap-4" : "flex-row"}`}
+              >
+                <div
+                  className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}
+                >
+                  <p className="font-semibold text-[#475467] text-sm">
+                    IMPLANT
+                  </p>
+                  <p className="font-medium text-[#475467] text-sm">
+                    {patient?.post_surgery_details?.implant || "Not Available"}
+                  </p>
+                </div>
+                <div
+                  className={`flex flex-col ${width < 570 ? "w-full" : "w-[50%]"}`}
+                >
+                  <p className="font-semibold text-[#475467] text-sm">
+                    TECHNOLOGY
+                  </p>
+                  <p className="font-medium italic text-[#475467] text-sm">
+                    {patient?.post_surgery_details?.technology ||
+                      "Not Available"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

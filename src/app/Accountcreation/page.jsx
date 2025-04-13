@@ -268,7 +268,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       // Optionally, show success message here
     } catch (error) {
       console.error("Error submitting data:", error);
-      showWarning("Something went wrong. Please try again.");
+      showWarning("This UHID, email, or phone number is already used for another patient.");
     }
   };
 

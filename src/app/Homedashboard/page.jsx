@@ -244,15 +244,58 @@ const page = () => {
     return false;
   });
 
-  const displayedPatients = patients.filter((patient) => {
+  const convertToDateString = (utcDate) => {
+    const date = new Date(utcDate); // Parse the UTC date string into a Date object
+
+    // Get the date in YYYY-MM-DD format
+    const year = date.getUTCFullYear();
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, "0"); // Months are 0-indexed, so add 1
+    const day = date.getUTCDate().toString().padStart(2, "0");
+
+    return `${year}-${month}-${day}`; // Return the date in the format "YYYY-MM-DD"
+  };
+
+  const isSameDay = (d1, d2) => {
+    const date1 = new Date(d1);
+    const date2 = new Date(d2);
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+
+  const displayedPatients = [];
+
+  patients.forEach((patient) => {
     const status = patient.current_status?.toLowerCase() || "";
     const selectedFilter = patprogressfilter.toLowerCase();
 
-    if (selectedFilter === "all") return true;
-    if (selectedFilter === "pre op") return status.includes("pre");
-    if (selectedFilter === "post op") return !status.includes("pre");
+    const statusMatch =
+      selectedFilter === "all" ||
+      (selectedFilter === "pre op" && status.includes("pre")) ||
+      (selectedFilter === "post op" && !status.includes("pre"));
 
-    return false;
+    if (!statusMatch) return;
+
+    // Go through each questionnaire for this patient
+    patient.questionnaire_assigned?.forEach((q) => {
+      // Convert the deadline from UTC to YYYY-MM-DD format
+      const deadlineInDateFormat = convertToDateString(q.deadline);
+
+      // Check if the selected date matches and if the questionnaire is incomplete
+      if (
+        (!selectedDate || isSameDay(deadlineInDateFormat, selectedDate)) && // Date match
+        q.completed === 0 // Only show incomplete questionnaires
+      ) {
+        // Push the same patient object with deadline info if needed
+        displayedPatients.push({
+          ...patient,
+          matched_deadline: deadlineInDateFormat, // Show the deadline in YYYY-MM-DD format
+          matched_questionnaire: q.name, // Optional: To track which questionnaire
+        });
+      }
+    });
   });
 
   return (
@@ -316,7 +359,9 @@ const page = () => {
                 className="w-8 h-8 rounded-full object-cover"
               />
               <p className="text-sm font-medium text-[#0D0D0D] whitespace-nowrap">
-                Mr. Mathew
+                {userData?.user?.admin_name
+                  ? `${userData.user.admin_name}`
+                  : "Loading..."}
               </p>
             </div>
           </div>
@@ -342,8 +387,8 @@ const page = () => {
               width < 650 && width >= 530
                 ? "flex-col justify-center items-start gap-3"
                 : width < 530
-                ? "flex-col justify-center items-center gap-3"
-                : "flex-row justify-between items-start"
+                  ? "flex-col justify-center items-center gap-3"
+                  : "flex-row justify-between items-start"
             }`}
           >
             <p className="text-black text-2xl font-poppins font-semibold">
@@ -354,8 +399,8 @@ const page = () => {
                 width < 650 && width >= 530
                   ? "items-start"
                   : width < 530
-                  ? "items-center"
-                  : "items-end"
+                    ? "items-center"
+                    : "items-end"
               }`}
             >
               <div className="flex bg-[#282B30] rounded-full p-1 w-fit items-center justify-center">
@@ -409,20 +454,20 @@ const page = () => {
                   ? "h-[75%]"
                   : "h-[83%]"
                 : width < 450 && width / height >= 0.5
-                ? patfilter.toLowerCase() === "post operative"
-                  ? "h-[60%]"
-                  : "h-[80%]"
-                : width < 450 && width / height < 0.5
-                ? patfilter.toLowerCase() === "post operative"
-                  ? "h-[67%]"
-                  : "h-[83%]"
-                : width >= 1000 && width < 1272 && width / height > 1
-                ? patfilter.toLowerCase() === "post operative"
-                  ? "h-[75%]"
-                  : "h-[84%]"
-                : patfilter.toLowerCase() === "post operative"
-                ? "h-[82.8%]"
-                : "h-[90%]"
+                  ? patfilter.toLowerCase() === "post operative"
+                    ? "h-[60%]"
+                    : "h-[80%]"
+                  : width < 450 && width / height < 0.5
+                    ? patfilter.toLowerCase() === "post operative"
+                      ? "h-[67%]"
+                      : "h-[83%]"
+                    : width >= 1000 && width < 1272 && width / height > 1
+                      ? patfilter.toLowerCase() === "post operative"
+                        ? "h-[75%]"
+                        : "h-[84%]"
+                      : patfilter.toLowerCase() === "post operative"
+                        ? "h-[82.8%]"
+                        : "h-[90%]"
             }`}
           >
             {filteredPatients.map((patient) => (
@@ -441,8 +486,8 @@ const page = () => {
                     width < 640 && width >= 530
                       ? "w-3/5"
                       : width < 530
-                      ? "w-full"
-                      : "w-[50%]"
+                        ? "w-full"
+                        : "w-[50%]"
                   }`}
                 >
                   <div
@@ -450,8 +495,8 @@ const page = () => {
                       width < 710 && width >= 640
                         ? "px-0 flex-row"
                         : width < 530
-                        ? "flex-col justify-center items-center"
-                        : "px-2 flex-row"
+                          ? "flex-col justify-center items-center"
+                          : "px-2 flex-row"
                     }`}
                   >
                     <Image
@@ -497,8 +542,8 @@ const page = () => {
                           width < 710 && width >= 530
                             ? "w-full text-start"
                             : width < 530
-                            ? "w-full text-center"
-                            : "w-[30%] text-center"
+                              ? "w-full text-center"
+                              : "w-[30%] text-center"
                         }`}
                       >
                         UHID {patient.uhid}
@@ -512,8 +557,8 @@ const page = () => {
                     width < 640 && width >= 530
                       ? "w-2/5 flex-col text-start"
                       : width < 530
-                      ? "w-full flex-col text-start"
-                      : "w-[50%] flex-row"
+                        ? "w-full flex-col text-start"
+                        : "w-[50%] flex-row"
                   }`}
                 >
                   <div
@@ -521,8 +566,8 @@ const page = () => {
                       width <= 750 && width >= 530
                         ? "flex-col items-end"
                         : width < 530
-                        ? "flex-col items-center"
-                        : "flex-row"
+                          ? "flex-col items-center"
+                          : "flex-row"
                     } 
                     ${width < 640 ? "w-full justify-end" : "w-[70%]"}`}
                   >
@@ -531,8 +576,8 @@ const page = () => {
                         width <= 750 && width >= 530
                           ? "w-3/4 text-start"
                           : width < 530
-                          ? "w-full text-center"
-                          : "w-[35%] text-end"
+                            ? "w-full text-center"
+                            : "w-[35%] text-end"
                       }`}
                     >
                       {patient.current_status}
@@ -542,17 +587,17 @@ const page = () => {
                         width <= 750 && width >= 530
                           ? "w-3/4 text-start"
                           : width < 530
-                          ? "w-full text-center"
-                          : "w-[65%] text-end"
+                            ? "w-full text-center"
+                            : "w-[65%] text-end"
                       }`}
                     >
                       {patient.questionnaire_assigned?.length === 0
                         ? "NOT ASSIGNED"
                         : patient.questionnaire_assigned.every(
-                            (q) => q.completed === 0
-                          )
-                        ? "PENDING"
-                        : "COMPLETED"}
+                              (q) => q.completed === 0
+                            )
+                          ? "PENDING"
+                          : "COMPLETED"}
                     </div>
                   </div>
 
@@ -566,8 +611,8 @@ const page = () => {
                         width < 640 && width >= 530
                           ? "w-3/4"
                           : width < 530
-                          ? "w-full justify-center"
-                          : ""
+                            ? "w-full justify-center"
+                            : ""
                       }`}
                       onClick={() => {
                         setSelectedPatient(patient);
@@ -595,10 +640,10 @@ const page = () => {
               width >= 1272
                 ? "pl-15 gap-5"
                 : width >= 1000 && width < 1272 && width / height > 1
-                ? "pl-6 gap-2"
-                : width < 1000
-                ? "pl-0 mt-6 gap-4"
-                : "pl-0 mt-6"
+                  ? "pl-6 gap-2"
+                  : width < 1000
+                    ? "pl-0 mt-6 gap-4"
+                    : "pl-0 mt-6"
             }
             ${width >= 1000 && width / height > 1 ? "w-1/3" : "w-full "}`}
         >
@@ -607,8 +652,8 @@ const page = () => {
               width < 1170 && width >= 1000
                 ? "gap-4"
                 : width < 1000
-                ? "h-fit"
-                : "h-[15%] gap-12"
+                  ? "h-fit"
+                  : "h-[15%] gap-12"
             }`}
           >
             <div
@@ -1060,17 +1105,16 @@ const page = () => {
         patient={selectedPatient}
       />
       <Accountcreation
-  isOpenacc={isOpenacc}
-  onCloseacc={() => setIsOpenacc(false)}
-  userData={userData}
-/>
+        isOpenacc={isOpenacc}
+        onCloseacc={() => setIsOpenacc(false)}
+        userData={userData}
+      />
 
-<Accountcreationdoctor
-  isOpenaccdoc={isOpenaccdoc}
-  onCloseaccdoc={() => setIsOpenaccdoc(false)}
-  userData={userData}
-/>
-
+      <Accountcreationdoctor
+        isOpenaccdoc={isOpenaccdoc}
+        onCloseaccdoc={() => setIsOpenaccdoc(false)}
+        userData={userData}
+      />
     </>
   );
 };
