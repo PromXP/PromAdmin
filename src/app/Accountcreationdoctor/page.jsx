@@ -287,6 +287,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
                     onClick={() => {
                       setMessage("");
                       onCloseaccdoc(); // if onCloserem handles popup close
+                      clearAllFields();
                     }}
                   />
                 </div>

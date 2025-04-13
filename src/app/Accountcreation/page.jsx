@@ -339,6 +339,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
                     onClick={() => {
                       setMessage("");
                       onCloseacc(); // if onCloserem handles popup close
+                      clearAllFields();
                     }}
                   />
                 </div>
