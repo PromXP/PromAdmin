@@ -92,7 +92,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     "Short Form - 12 (SF-12)",
     "Knee Society Score (KSS)",
     "Knee Injury and Ostheoarthritis Outcome Score, Joint Replacement (KOOS, JR)",
-    "Forgotten Join Score (FJS)",
+    "Forgotten Joint Score (FJS)",
   ];
 
   const handleCheckboxChange = (item) => {
