@@ -197,28 +197,28 @@ const page = () => {
     fetchPatients();
   }, [userData?.user?.email]);
 
+  const [doctorCount, setDoctorCount] = useState("Loading...");
+
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        console.log("HIIII", userData?.user?.email);
-        const res = await fetch(
-          `https://promapi.onrender.com/doctors/by-admin/${userData?.user?.email}`
-        );
+        const res = await fetch(`https://promapi.onrender.com/getalldoctors`);
         const data = await res.json();
-        console.log("Fetched doctor list:", data); // Should appear
-        const formatted = data.map(
-          (doc) => `${doc.doctor_name} - ${doc.email}`
-        );
+
+        // Set doctor count (length of data array)
+        setDoctorCount(data.length);
+
+        // Format doctor list to show name and email
+        const formatted = data.map((doc) => `${doc.doctor_name} - ${doc.email}`);
         setDoctorList(formatted);
       } catch (error) {
         console.error("Error fetching doctors:", error);
+        setDoctorCount("Error");
       }
     };
 
-    if (userData?.user?.email) {
-      fetchDoctors();
-    }
-  }, [userData?.user?.email]);
+    fetchDoctors();
+  }, []);
 
   const filteredPatients = patients.filter((patient) => {
     const status = patient.current_status.toLowerCase();
@@ -703,7 +703,7 @@ const page = () => {
                     width < 1060 && width >= 1000 ? "text-3xl" : "text-4xl"
                   }`}
                 >
-                  {userData?.user?.doctors_created?.length ?? "Loading..."}
+                  {doctorCount}
                 </p>
               </div>
               <p
