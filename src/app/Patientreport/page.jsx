@@ -91,7 +91,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     "Oxford Knee Score (OKS)",
     "Short Form - 12 (SF-12)",
     "Knee Society Score (KSS)",
-    "Knee Injury and Osethoarthritis Outcome Score, Joint Replacement (KOOS, JR)",
+    "Knee Injury and Ostheoarthritis Outcome Score, Joint Replacement (KOOS, JR)",
     "Forgotten Join Score (FJS)",
   ];
 
