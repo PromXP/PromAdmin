@@ -105,7 +105,7 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
     }
   
     try {
-      const res = await fetch('/api/send', {
+      const res = await fetch('https://promapi.onrender.com/send/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
