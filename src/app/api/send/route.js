@@ -7,7 +7,7 @@ export async function POST(req) {
     const { email, subject, message } = await req.json();
 
     const data = await resend.emails.send({
-      from: 'Xolabs <ronaldshawv@thewad.co>',
+      from: 'Xolabs Health <ronaldshawv@thewad.co>',
       to: email, // ✅ dynamic recipient
       subject,
       html: `<div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 40px;">
