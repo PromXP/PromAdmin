@@ -191,11 +191,9 @@ const page = () => {
                 }`}
 
                 onClick={() => {
-                  router.push("/");
+                  router.replace("/");
                   localStorage.removeItem("userData");
                 }}
-                
-                
               >
                 <svg
                   width="31"
