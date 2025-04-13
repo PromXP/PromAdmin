@@ -196,7 +196,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
     if (!selectedGender.trim()) return showWarning("Gender is required.");
     // if (selectedOptiondrop === "Select")
     //   return showWarning("Blood group must be selected.");
-    if (!phone.trim()) return showWarning("Phone number is required.");
+    if (!phone.trim() && phone.trim.length===10) return showWarning("Enter Correct Phone number.");
     if (!email.trim()) return showWarning("Email is required.");
 
     
