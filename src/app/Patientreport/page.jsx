@@ -213,6 +213,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const [socket, setSocket] = useState(null);
+
   useEffect(() => {
     const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
 
@@ -284,7 +285,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     }
   };
 
-  const socket = useWebSocket();
 
 
   const sendRealTimeMessage = () => {
@@ -380,13 +380,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
-<<<<<<< HEAD
 
       window.location.reload();
 
-=======
-      window.location.reload();
->>>>>>> fbcec80 (error fix 1)
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
 
