@@ -173,6 +173,8 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       setWarning("Questionnaires successfully assigned!");
       setTimeout(() => setWarning(""), 3000);
+
+      
     } catch (err) {
       console.error("Network error:", err);
       setWarning("Network error. Please try again.");
@@ -293,6 +295,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       setShowAlert(true);
       setAlertMessage("Please select a doctor.");
       setTimeout(() => setShowAlert(false), 2500);
+      window.location.reload();
       return;
     }
   
@@ -430,6 +433,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       const result = await response.json();
       console.log("Surgery scheduled successfully:", result);
+      window.location.reload();
       // Optionally reset form or show success feedback
     } catch (error) {
       console.error("Error scheduling surgery:", error);

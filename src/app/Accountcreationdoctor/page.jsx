@@ -194,8 +194,8 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
 
     if (age <= 0) return showWarning("Select Date of Birth Correctly");
     if (!selectedGender.trim()) return showWarning("Gender is required.");
-    // if (selectedOptiondrop === "Select")
-    //   return showWarning("Blood group must be selected.");
+    if (selectedOptiondrop === "Select")
+      return showWarning("Blood group must be selected.");
     if (!/^\d{10}$/.test(phone.trim())) {
       return showWarning("Phone number must be exactly 10 digits.");
     }
@@ -214,6 +214,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
       password: "doctor@123",
       admin_created: userData?.user?.email,
       patients_assigned: [],
+      blood_group: selectedOptiondrop.trim()
     };
 
     try {
