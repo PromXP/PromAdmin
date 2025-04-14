@@ -307,14 +307,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
-<<<<<<< HEAD
-
       window.location.reload();
-
-  
-=======
-      window.location.reload();
->>>>>>> fbcec80 (error fix 1)
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
 
