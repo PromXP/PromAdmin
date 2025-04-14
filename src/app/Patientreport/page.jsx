@@ -295,7 +295,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       setShowAlert(true);
       setAlertMessage("Please select a doctor.");
       setTimeout(() => setShowAlert(false), 2500);
-      window.location.reload();
       return;
     }
   
@@ -334,6 +333,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
+
+      window.location.reload();
+
   
       // Optionally refresh the data or trigger a UI update
     } catch (error) {
