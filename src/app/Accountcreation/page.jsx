@@ -251,7 +251,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
         time: "hh:mm AM", // replace with actual selected time
       },
       post_surgery_details: {
-        date_of_surgery: "2025-04-09",
+        date_of_surgery: "0000-00-00",
         surgeon: "", // replace accordingly
         surgery_name: "", // if different
         procedure: "", // replace

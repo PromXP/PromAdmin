@@ -251,7 +251,7 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
           window.location.reload();
         } catch (error) {
       console.error("Error submitting doctor data:", error);
-      showWarning("Something went wrong. Please try again.");
+      showWarning("This UHID, email, or phone number is already used for another patient.");
     }
     finally{
       setIsSubmitting(false); // 🔓 Unlock submission

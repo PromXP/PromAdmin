@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
+import { useWebSocket } from "../context/WebSocketContext"; 
 import Image from "next/image";
 
 import { Poppins } from "next/font/google";
@@ -71,31 +71,7 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
   }
 
   const [message, setMessage] = useState("");
-  const [socket, setSocket] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
-
-  useEffect(() => {
-    const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
-  
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-    };
-  
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("📩 Message from server:", data);
-    };
-  
-    ws.onclose = () => {
-      console.log("❌ WebSocket disconnected");
-    };
-  
-    setSocket(ws);
-  
-    return () => {
-      ws.close();
-    };
-  }, []);
 
   const handleSendremainder = async () => {
     if (message.trim() === "") {
@@ -139,6 +115,7 @@ const page = ({ isOpenrem, onCloserem, patient }) => {
     }
   };
   
+  const socket = useWebSocket();
 
 const sendRealTimeMessage = () => {
   if (!socket || socket.readyState !== WebSocket.OPEN) {

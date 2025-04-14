@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
+import { useWebSocket } from "../context/WebSocketContext"; 
 import Image from "next/image";
 
 import { Poppins } from "next/font/google";
@@ -210,9 +210,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       console.error("Network error:", err);
       setWarning("Network error. Please try again.");
     }
-    finally{
-      setIsSubmitting(true);
-    }
   };
 
   const [socket, setSocket] = useState(null);
@@ -287,6 +284,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     }
   };
 
+  const socket = useWebSocket();
+
+
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("⚠️ WebSocket is not open. Cannot send message.");
@@ -302,6 +302,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     };
 
     socket.send(JSON.stringify(payload));
+    window.location.reload();
     console.log("📤 Sent via WebSocket:", payload);
 
     setIsSubmitting(true);
@@ -379,9 +380,13 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
+<<<<<<< HEAD
 
       window.location.reload();
 
+=======
+      window.location.reload();
+>>>>>>> fbcec80 (error fix 1)
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
 
