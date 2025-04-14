@@ -181,15 +181,13 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
 
   const [alertMessage, setAlertMessage] = useState("");
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSendremainder = async () => {
-
-    if (isSubmitting){
+    if (isSubmitting) {
       showWarning("Please wait submission on progress...");
       return; // Prevent double submission
-    } 
+    }
 
     if (!firstName.trim()) return showWarning("First Name is required.");
     if (!lastName.trim()) return showWarning("Last Name is required.");
@@ -219,7 +217,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
     if (!/^\d{10}$/.test(phone.trim())) {
       return showWarning("Phone number must be exactly 10 digits.");
     }
-    
+
     if (!email.trim()) return showWarning("Email is required.");
     if (!heightbmi.trim()) return showWarning("Height is required.");
     if (!weight.trim()) return showWarning("Weight is required.");
@@ -249,8 +247,8 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       questionnaire_assigned: [],
       questionnaire_scores: [],
       surgery_scheduled: {
-        date: "2025-04-15", // replace with actual selected date
-        time: "10:30 AM", // replace with actual selected time
+        date: "yyyy-mm-dd", // replace with actual selected date
+        time: "hh:mm AM", // replace with actual selected time
       },
       post_surgery_details: {
         date_of_surgery: "2025-04-09",
@@ -264,7 +262,6 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
     };
 
     setIsSubmitting(true); // 🔒 Lock submission
-
 
     try {
       const response = await fetch(
@@ -292,8 +289,7 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       showWarning(
         "This UHID, email, or phone number is already used for another patient."
       );
-    }
-    finally{
+    } finally {
       setIsSubmitting(false); // 🔓 Unlock submission
     }
   };

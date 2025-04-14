@@ -32,6 +32,30 @@ const poppins = Poppins({
 });
 
 const page = ({ isOpen, onClose, patient, doctor }) => {
+  const periodPriority = ["pre-op", "6w", "3m", "6m", "1y", "2y"];
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getLatestPeriod = (questionnaires = []) => {
+    let latest = null;
+    let maxIndex = -1;
+
+    for (const q of questionnaires) {
+      const period = q.period?.toLowerCase(); // Normalize casing
+      const index = periodPriority.indexOf(period);
+      if (index > maxIndex) {
+        maxIndex = index;
+        latest = q.period; // Return original casing if needed
+      }
+    }
+
+    return latest || "Not Available";
+  };
+
+  // Usage:
+  const latestPeriod = getLatestPeriod(patient?.questionnaire_assigned);
+  console.log("Latest period:", patient?.questionnaire_assigned);
+
   const useWindowSize = () => {
     const [size, setSize] = useState({
       width: 0,
@@ -62,7 +86,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   const optionsdrop = ["Pre Op", "6W", "3M", "6M", "1Y", "2Y"];
 
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // "yyyy-mm-dd"
+  });
   const dateInputRef = useRef(null);
 
   const handleSelectdrop = (option) => {
@@ -77,12 +104,12 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const handleDateChange = (e) => {
     const dateValue = e.target.value;
     if (dateValue) {
-      const formattedDate = new Date(dateValue).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      setSelectedDate(formattedDate);
+      // const formattedDate = new Date(dateValue).toLocaleDateString("en-GB", {
+      //   day: "2-digit",
+      //   month: "short",
+      //   year: "numeric",
+      // });
+      setSelectedDate(dateValue);
     }
   };
 
@@ -115,6 +142,12 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const [warning, setWarning] = useState("");
 
   const handleAssign = async () => {
+
+    if (isSubmitting){
+      showWarning("Please wait Assigning on progress...");
+      return; // Prevent double submission
+    } 
+
     if (!selectedOptiondrop || selectedOptiondrop === "Period") {
       setWarning("Please select a Time Period");
       return;
@@ -173,11 +206,12 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
       setWarning("Questionnaires successfully assigned!");
       setTimeout(() => setWarning(""), 3000);
-
-      
     } catch (err) {
       console.error("Network error:", err);
       setWarning("Network error. Please try again.");
+    }
+    finally{
+      setIsSubmitting(true);
     }
   };
 
@@ -206,11 +240,14 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   }, []);
 
   const handleSendremainder = async () => {
+
+    
+
     if (!patient?.email) {
       alert("Patient email is missing.");
       return;
     }
-  
+
     try {
       const res = await fetch("https://promapi.onrender.com/send/", {
         method: "POST",
@@ -223,7 +260,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
           message: "Questionnaire Assigned",
         }),
       });
-  
+
       let data;
       const text = await res.text();
       try {
@@ -231,28 +268,29 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       } catch {
         data = { error: "Invalid JSON response", raw: text };
       }
-  
+
       console.log("Email send response:", data);
-  
+
       if (!res.ok) {
         alert("Failed to send email.");
         return;
       }
-  
+
       alert("✅ Email sent (check console for details)");
       sendRealTimeMessage();
     } catch (error) {
       console.error("❌ Error sending email:", error);
       alert("Failed to send email.");
     }
+    finally{
+      setIsSubmitting(true);
+    }
   };
-  
-
-  
 
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("⚠️ WebSocket is not open. Cannot send message.");
+      setIsSubmitting(true);
       return;
     }
 
@@ -265,6 +303,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
     socket.send(JSON.stringify(payload));
     console.log("📤 Sent via WebSocket:", payload);
+
+    setIsSubmitting(true);
+
+    window.location.reload();
   };
 
   const [userData, setUserData] = useState(null);
@@ -291,27 +333,34 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const handleAssigndoc = async () => {
+    if (isSubmitting){
+      showWarning("Please wait Assigning on progress...");
+      return; // Prevent double submission
+    } 
+
     if (!selectedDoctor) {
       setShowAlert(true);
       setAlertMessage("Please select a doctor.");
       setTimeout(() => setShowAlert(false), 2500);
       return;
     }
-  
+
     const doctorName = selectedDoctor.split(" - ")[1]; // Extract doctor name
     const patientUhid = patient?.uhid; // Selected patient value
-  
+
     if (!patientUhid) {
       console.error("No patient selected for assignment.");
       return;
     }
-  
+
     const payload = {
       uhid: patient.uhid,
       doctor_assigned: doctorName,
     };
     console.log(doctorName);
-  
+
+    isSubmitting(true);
+
     try {
       const response = await fetch(
         "https://promapi.onrender.com/update-doctor",
@@ -323,29 +372,28 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
           body: JSON.stringify(payload),
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
 
       window.location.reload();
 
-  
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
 
-
-  
       // Optionally refresh the data or trigger a UI update
     } catch (error) {
       console.error("Error assigning doctor:", error);
       alert("Error assigning doctor, please try again.");
     }
+    finally{
+      isSubmitting(true);
+    }
   };
-  
 
   const [selectedDatesurgery, setSelectedDatesurgery] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -364,24 +412,23 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   const handleDateChangesurgery = (e) => {
     const selectedDate = e.target.value;
-  
+
     if (!selectedDate) return;
-  
+
     const today = new Date();
     const selected = new Date(selectedDate);
-  
+
     // Set time to 00:00:00 to compare only the date part
     today.setHours(0, 0, 0, 0);
     selected.setHours(0, 0, 0, 0);
-  
+
     if (selected < today) {
       alert("Please select a valid future or current date.");
       return;
     }
-  
+
     setSelectedDatesurgery(selectedDate);
   };
-  
 
   const handleTimeChange = (e) => {
     setSelectedTime(e.target.value);
@@ -393,6 +440,11 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const handleAssignsurgery = async () => {
+    if (isSubmitting){
+      showWarning("Please wait Assigning on progress...");
+      return; // Prevent double submission
+    } 
+
     if (!selectedDatesurgery || !selectedTime) {
       setWarning("Please select both date and time.");
       return;
@@ -419,6 +471,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       },
     };
 
+
+    setIsSubmitting(true);
+
     try {
       const response = await fetch(
         "https://promapi.onrender.com/update-surgery-schedule",
@@ -441,6 +496,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       // Optionally reset form or show success feedback
     } catch (error) {
       console.error("Error scheduling surgery:", error);
+    }
+    finally{
+      setIsSubmitting(true);
     }
   };
 
@@ -531,7 +589,12 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                     }`}
                     src={Closeicon}
                     alt="close"
-                    onClick={onClose}
+                    onClick={() => {
+                      onClose();
+                      handleClearAll();
+                      handleClearAlldoc();
+                      handleClearAllsurgery();
+                    }}
                   />
                 </div>
                 <div
@@ -644,9 +707,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                             DOCTOR ASSIGNED
                           </p>
                           <p className="text-black font-bold text-6">
-                            {patient.doctor_name
-                              ? patient.doctor_name
-                              : "-"}
+                            {patient.doctor_name ? patient.doctor_name : "-"}
                           </p>
                         </div>
                         <div
@@ -660,7 +721,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                             STATUS
                           </p>
                           <p className="text-[#FFB978] font-bold text-6">
-                            {patient.current_status}
+                            {latestPeriod || "NOT YET UPDATED"}
                           </p>
                         </div>
                       </div>
@@ -753,12 +814,22 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   onClick={openDatePicker}
                 >
                   <p className="font-medium italic text-[#475467] text-sm">
-                    {selectedDate || "DEADLINE"}
+                    {selectedDate
+                      ? new Date(selectedDate + "T00:00:00").toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          }
+                        )
+                      : "DEADLINE"}
                   </p>
                   <div className="relative">
                     <input
                       type="date"
                       ref={dateInputRef}
+                      value={selectedDate} // <-- controlled input
                       onChange={handleDateChange}
                       className="absolute opacity-0 pointer-events-none"
                     />
@@ -822,9 +893,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={handleAssign}
+                    onClick={!isSubmitting ?handleAssign:undefined}
                   >
-                    ASSIGN
+                      {isSubmitting ? "ASSIGNING..." : "ASSIGN"}
+                    
                   </p>
                 </div>
               </div>
@@ -905,10 +977,11 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={handleAssigndoc}
-                  >
-                    ASSIGN
-                  </p>
+                    onClick={!isSubmitting ?handleAssigndoc:undefined}
+                    >
+                        {isSubmitting ? "ASSIGNING..." : "ASSIGN"}
+                      
+                    </p>
                 </div>
               </div>
             </div>
@@ -1035,10 +1108,16 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                         alert("Please assign a doctor first");
                         return;
                       }
-                      handleAssignsurgery();
+                      if(!isSubmitting){
+                        handleAssignsurgery();
+                      }
+                      else{
+                      undefined
+                      }
+
                     }}
-                  >
-                    ASSIGN
+                    >
+                    {isSubmitting ? "SCHEDULING..." : "SCHEDULE"}
                   </p>
                 </div>
               </div>
@@ -1123,15 +1202,24 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                       DATE OF SURGERY
                     </p>
                     <p className="font-medium italic text-[#475467] text-sm">
-                      {patient?.post_surgery_details?.date_of_surgery
-                        ? new Date(
-                            patient.post_surgery_details.date_of_surgery
-                          ).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "2-digit",
-                          })
-                        : "Not Available"}
+                      {(() => {
+                        const rawDate =
+                          patient?.post_surgery_details?.date_of_surgery;
+
+                        // Check if it's in raw "yyyy-mm-dd" format
+                        const isRawFormat = /^\d{4}-\d{2}-\d{2}$/.test(rawDate);
+
+                        if (!rawDate || isRawFormat) {
+                          return "dd/mm/yyyy";
+                        }
+
+                        const date = new Date(rawDate);
+                        return date.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "2-digit",
+                        });
+                      })()}
                     </p>
                   </div>
                   <div className="w-1/2 flex flex-col justify-end items-center">
