@@ -181,7 +181,16 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
 
   const [alertMessage, setAlertMessage] = useState("");
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+  
+
   const handleSendremainder = async () => {
+
+    if (isSubmitting){
+      showWarning("Please wait submission on progress...");
+      return; // Prevent double submission
+    } 
+
     if (!firstName.trim()) return showWarning("First Name is required.");
     if (!lastName.trim()) return showWarning("Last Name is required.");
     if (!uhid.trim()) return showWarning("UHID is required.");
@@ -254,6 +263,9 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       current_status: "PRE OP",
     };
 
+    setIsSubmitting(true); // 🔒 Lock submission
+
+
     try {
       const response = await fetch(
         "https://promapi.onrender.com/registerpatient",
@@ -280,6 +292,9 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       showWarning(
         "This UHID, email, or phone number is already used for another patient."
       );
+    }
+    finally{
+      setIsSubmitting(false); // 🔓 Unlock submission
     }
   };
 
@@ -674,9 +689,9 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={handleSendremainder}
+                    onClick={!isSubmitting ? handleSendremainder : undefined}
                   >
-                    SEND
+                    {isSubmitting ? "CREATING..." : "CREATE"}
                   </p>
                 </div>
               </div>

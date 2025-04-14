@@ -169,7 +169,15 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
 
   const [alertMessage, setAlertMessage] = useState("");
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
   const handleSendremainder = async () => {
+    if (isSubmitting){
+      showWarning("Please wait submission on progress...");
+      return; // Prevent double submission
+    } 
+
     if (!firstName.trim()) return showWarning("First Name is required.");
     if (!lastName.trim()) return showWarning("Last Name is required.");
     if (!uhid.trim()) return showWarning("UHID is required.");
@@ -217,6 +225,9 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
       blood_group: selectedOptiondrop.trim()
     };
 
+    setIsSubmitting(true); // 🔒 Lock submission
+
+
     try {
       const response = await fetch(
         "https://promapi.onrender.com/registerdoctor",
@@ -241,6 +252,9 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
         } catch (error) {
       console.error("Error submitting doctor data:", error);
       showWarning("Something went wrong. Please try again.");
+    }
+    finally{
+      setIsSubmitting(false); // 🔓 Unlock submission
     }
   };
 
@@ -565,9 +579,9 @@ const page = ({ isOpenaccdoc, onCloseaccdoc, userData }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={handleSendremainder}
+                    onClick={!isSubmitting ? handleSendremainder : undefined}
                   >
-                    SEND
+                      {isSubmitting ? "CREATING..." : "CREATE"}
                   </p>
                 </div>
               </div>
