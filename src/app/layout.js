@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { WebSocketProvider } from "./context/WebSocketContext"; // 👈 import the provider
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <WebSocketProvider> {/* 👈 wrap everything with the WebSocket context */}
+          {children}
+        </WebSocketProvider>
       </body>
     </html>
   );

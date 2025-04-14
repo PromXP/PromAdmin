@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
+import { useWebSocket } from "../context/WebSocketContext"; 
 import Image from "next/image";
 
 import { Poppins } from "next/font/google";
@@ -181,30 +181,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     }
   };
 
-  const [socket, setSocket] = useState(null);
-  useEffect(() => {
-    const ws = new WebSocket("wss://promapi.onrender.com/ws/message");
-
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("📩 Message from server:", data);
-    };
-
-    ws.onclose = () => {
-      console.log("❌ WebSocket disconnected");
-    };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, []);
-
   const handleSendremainder = async () => {
     if (!patient?.email) {
       alert("Patient email is missing.");
@@ -246,9 +222,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       alert("Failed to send email.");
     }
   };
-  
 
-  
+  const socket = useWebSocket();
+
 
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -264,6 +240,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     };
 
     socket.send(JSON.stringify(payload));
+    window.location.reload();
     console.log("📤 Sent via WebSocket:", payload);
   };
 
@@ -330,10 +307,14 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   
       const result = await response.json();
       console.log("Doctor assigned successfully:", result);
+<<<<<<< HEAD
 
       window.location.reload();
 
   
+=======
+      window.location.reload();
+>>>>>>> fbcec80 (error fix 1)
       // Show an alert box indicating that the UI will update soon
       alert("Doctor assigned. The changes will reflect soon.");
 

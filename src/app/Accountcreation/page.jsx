@@ -249,11 +249,11 @@ const page = ({ isOpenacc, onCloseacc, userData }) => {
       questionnaire_assigned: [],
       questionnaire_scores: [],
       surgery_scheduled: {
-        date: "2025-04-15", // replace with actual selected date
-        time: "10:30 AM", // replace with actual selected time
+        date: "0000-00-00", // replace with actual selected date
+        time: "00:00 AM", // replace with actual selected time
       },
       post_surgery_details: {
-        date_of_surgery: "2025-04-09",
+        date_of_surgery: "0000-00-00",
         surgeon: "", // replace accordingly
         surgery_name: "", // if different
         procedure: "", // replace
