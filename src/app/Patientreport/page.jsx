@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useWebSocket } from "../context/WebSocketContext"; 
+import { useWebSocket } from "../context/WebSocketContext";
 import Image from "next/image";
 
 import { Poppins } from "next/font/google";
@@ -144,11 +144,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const [warning, setWarning] = useState("");
 
   const handleAssign = async () => {
-
-    if (qisSubmitting){
+    if (qisSubmitting) {
       showWarning("Please wait Assigning on progress...");
       return; // Prevent double submission
-    } 
+    }
 
     if (!selectedOptiondrop || selectedOptiondrop === "Period") {
       setWarning("Please select a Time Period");
@@ -240,9 +239,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   }, []);
 
   const handleSendremainder = async () => {
-
-    
-
     if (!patient?.email) {
       alert("Patient email is missing.");
       return;
@@ -281,13 +277,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     } catch (error) {
       console.error("❌ Error sending email:", error);
       alert("Failed to send email.");
-    }
-    finally{
+    } finally {
       qsetIsSubmitting(true);
     }
   };
-
-
 
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -336,10 +329,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const handleAssigndoc = async () => {
-    if (isSubmitting){
+    if (isSubmitting) {
       showWarning("Please wait Assigning on progress...");
       return; // Prevent double submission
-    } 
+    }
 
     if (!selectedDoctor) {
       setShowAlert(true);
@@ -360,7 +353,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       uhid: patient.uhid,
       doctor_assigned: doctorName,
     };
-    console.log("Doctor assign "+payload);
+    console.log("Doctor assign " + payload);
 
     setIsSubmitting(true);
 
@@ -392,8 +385,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     } catch (error) {
       console.error("Error assigning doctor:", error);
       alert("Error assigning doctor, please try again.");
-    }
-    finally{
+    } finally {
       isSubmitting(true);
     }
   };
@@ -443,10 +435,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const handleAssignsurgery = async () => {
-    if (sisSubmitting){
+    if (sisSubmitting) {
       showWarning("Please wait Assigning on progress...");
       return; // Prevent double submission
-    } 
+    }
 
     if (!selectedDatesurgery || !selectedTime) {
       setWarning("Please select both date and time.");
@@ -474,7 +466,6 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       },
     };
 
-
     ssetIsSubmitting(true);
 
     try {
@@ -499,8 +490,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       // Optionally reset form or show success feedback
     } catch (error) {
       console.error("Error scheduling surgery:", error);
-    }
-    finally{
+    } finally {
       ssetIsSubmitting(true);
     }
   };
@@ -557,6 +547,8 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   }, [warning]);
 
   if (!isOpen) return null;
+
+  console.log("Surgery date " + patient?.post_surgery_details?.date_of_surgery);
 
   return (
     <div
@@ -724,7 +716,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                             STATUS
                           </p>
                           <p className="text-[#FFB978] font-bold text-6">
-                            {latestPeriod || "NOT YET UPDATED"}
+                            {patient.current_status || "NOT YET UPDATED"}
                           </p>
                         </div>
                       </div>
@@ -896,10 +888,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={!qisSubmitting ?handleAssign:undefined}
+                    onClick={!qisSubmitting ? handleAssign : undefined}
                   >
-                      {qisSubmitting ? "ASSIGNING..." : "ASSIGN"}
-                    
+                    {qisSubmitting ? "ASSIGNING..." : "ASSIGN"}
                   </p>
                 </div>
               </div>
@@ -980,11 +971,10 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={!isSubmitting ?handleAssigndoc:undefined}
-                    >
-                        {isSubmitting ? "ASSIGNING..." : "ASSIGN"}
-                      
-                    </p>
+                    onClick={!isSubmitting ? handleAssigndoc : undefined}
+                  >
+                    {isSubmitting ? "ASSIGNING..." : "ASSIGN"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1111,15 +1101,13 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                         alert("Please assign a doctor first");
                         return;
                       }
-                      if(!sisSubmitting){
+                      if (!sisSubmitting) {
                         handleAssignsurgery();
+                      } else {
+                        undefined;
                       }
-                      else{
-                      undefined
-                      }
-
                     }}
-                    >
+                  >
                     {sisSubmitting ? "SCHEDULING..." : "SCHEDULE"}
                   </p>
                 </div>
@@ -1209,14 +1197,15 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                         const rawDate =
                           patient?.post_surgery_details?.date_of_surgery;
 
-                        // Check if it's in raw "yyyy-mm-dd" format
-                        const isRawFormat = /^\d{4}-\d{2}-\d{2}$/.test(rawDate);
-
-                        if (!rawDate || isRawFormat) {
+                        if (!rawDate || rawDate === "0001-01-01") {
                           return "dd/mm/yyyy";
                         }
 
                         const date = new Date(rawDate);
+                        if (isNaN(date)) {
+                          return "Invalid date";
+                        }
+
                         return date.toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "2-digit",
