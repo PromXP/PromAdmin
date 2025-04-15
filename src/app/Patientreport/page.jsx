@@ -32,6 +32,11 @@ const poppins = Poppins({
 });
 
 const page = ({ isOpen, onClose, patient, doctor }) => {
+
+  // const parsedUser = JSON.parse(patient);
+
+  console.log("Surgery date " + patient?.surgery_scheduled?.date);
+
   const periodPriority = ["pre-op", "6w", "3m", "6m", "1y", "2y"];
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -548,7 +553,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   if (!isOpen) return null;
 
-  console.log("Surgery date " + patient?.post_surgery_details?.date_of_surgery);
+
 
   return (
     <div
@@ -1195,7 +1200,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                     <p className="font-medium italic text-[#475467] text-sm">
                       {(() => {
                         const rawDate =
-                          patient?.post_surgery_details?.date_of_surgery;
+                        patient?.surgery_scheduled?.date;
 
                         if (!rawDate || rawDate === "0001-01-01") {
                           return "dd/mm/yyyy";
