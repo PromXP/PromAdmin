@@ -34,6 +34,7 @@ const poppins = Poppins({
 const page = ({ isOpen, onClose, patient, doctor }) => {
   const periodPriority = ["pre-op", "6w", "3m", "6m", "1y", "2y"];
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [qisSubmitting, qsetIsSubmitting] = useState(false);
   const [sisSubmitting, ssetIsSubmitting] = useState(false);
 
