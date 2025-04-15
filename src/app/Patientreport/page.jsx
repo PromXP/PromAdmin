@@ -34,7 +34,8 @@ const poppins = Poppins({
 const page = ({ isOpen, onClose, patient, doctor }) => {
   const periodPriority = ["pre-op", "6w", "3m", "6m", "1y", "2y"];
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [qisSubmitting, qsetIsSubmitting] = useState(false);
+  const [sisSubmitting, ssetIsSubmitting] = useState(false);
 
   const getLatestPeriod = (questionnaires = []) => {
     let latest = null;
@@ -143,7 +144,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
   const handleAssign = async () => {
 
-    if (isSubmitting){
+    if (qisSubmitting){
       showWarning("Please wait Assigning on progress...");
       return; // Prevent double submission
     } 
@@ -281,7 +282,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       alert("Failed to send email.");
     }
     finally{
-      setIsSubmitting(true);
+      qsetIsSubmitting(true);
     }
   };
 
@@ -290,7 +291,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   const sendRealTimeMessage = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("⚠️ WebSocket is not open. Cannot send message.");
-      setIsSubmitting(true);
+      qsetIsSubmitting(true);
       return;
     }
 
@@ -305,7 +306,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     window.location.reload();
     console.log("📤 Sent via WebSocket:", payload);
 
-    setIsSubmitting(true);
+    qsetIsSubmitting(true);
 
     window.location.reload();
   };
@@ -358,9 +359,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       uhid: patient.uhid,
       doctor_assigned: doctorName,
     };
-    console.log(doctorName);
+    console.log("Doctor assign "+payload);
 
-    isSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(
@@ -441,7 +442,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
   };
 
   const handleAssignsurgery = async () => {
-    if (isSubmitting){
+    if (sisSubmitting){
       showWarning("Please wait Assigning on progress...");
       return; // Prevent double submission
     } 
@@ -473,7 +474,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
     };
 
 
-    setIsSubmitting(true);
+    ssetIsSubmitting(true);
 
     try {
       const response = await fetch(
@@ -499,7 +500,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
       console.error("Error scheduling surgery:", error);
     }
     finally{
-      setIsSubmitting(true);
+      ssetIsSubmitting(true);
     }
   };
 
@@ -894,9 +895,9 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                   <p
                     className="font-semibold rounded-full px-3 py-[1px] cursor-pointer text-center text-white text-sm border-[#005585] border-2"
                     style={{ backgroundColor: "rgba(0, 85, 133, 0.9)" }}
-                    onClick={!isSubmitting ?handleAssign:undefined}
+                    onClick={!qisSubmitting ?handleAssign:undefined}
                   >
-                      {isSubmitting ? "ASSIGNING..." : "ASSIGN"}
+                      {qisSubmitting ? "ASSIGNING..." : "ASSIGN"}
                     
                   </p>
                 </div>
@@ -1109,7 +1110,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
                         alert("Please assign a doctor first");
                         return;
                       }
-                      if(!isSubmitting){
+                      if(!sisSubmitting){
                         handleAssignsurgery();
                       }
                       else{
@@ -1118,7 +1119,7 @@ const page = ({ isOpen, onClose, patient, doctor }) => {
 
                     }}
                     >
-                    {isSubmitting ? "SCHEDULING..." : "SCHEDULE"}
+                    {sisSubmitting ? "SCHEDULING..." : "SCHEDULE"}
                   </p>
                 </div>
               </div>
